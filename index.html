@@ -2,72 +2,2595 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <title>三年級數學闖關遊戲</title>
-  <script type="module">
-    let level = 1;
-    let score = 0;
-    let questionsAnswered = 0;
-    let currentAnswer;
-
-    function generateQuestion() {
-      let max;
-      if (level === 1) {
-        max = 20;
-      } else if (level === 2) {
-        max = 50;
-      } else {
-        max = 100;
-      }
-      const num1 = Math.floor(Math.random() * max) + 1;
-      const num2 = Math.floor(Math.random() * max) + 1;
-      const ops = ['+', '-', '×'];
-      const op = ops[Math.floor(Math.random() * ops.length)];
-      const questionText = `${num1} ${op} ${num2}`;
-      if (op === '+') {
-        currentAnswer = num1 + num2;
-      } else if (op === '-') {
-        currentAnswer = num1 - num2;
-      } else {
-        currentAnswer = num1 * num2;
-      }
-      document.getElementById('question').textContent = questionText;
-      document.getElementById('answerInput').value = '';
-      document.getElementById('feedback').textContent = '';
-      document.getElementById('level').textContent = level;
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>JaxonLearn - 數學冒險王國</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #6C5CE7;
+      --secondary: #00CEC9;
+      --accent: #FDCB6E;
+      --danger: #E17055;
+      --success: #00B894;
+      --dark: #2D3436;
+      --light: #DFE6E9;
+      --white: #FFFFFF;
+      --gradient-1: linear-gradient(135deg, #6C5CE7 0%, #A29BFE 100%);
+      --gradient-2: linear-gradient(135deg, #00CEC9 0%, #81ECEC 100%);
+      --gradient-3: linear-gradient(135deg, #FDCB6E 0%, #F39C12 100%);
+      --shadow: 0 10px 40px rgba(0,0,0,0.2);
+      --shadow-sm: 0 4px 15px rgba(0,0,0,0.1);
     }
 
-    function checkAnswer() {
-      const userAnswer = parseInt(document.getElementById('answerInput').value, 10);
-      if (userAnswer === currentAnswer) {
-        score += 10;
-        questionsAnswered++;
-        if (questionsAnswered >= 5) {
-          level++;
-          questionsAnswered = 0;
-          document.getElementById('feedback').textContent = '恭喜！進入下一關！';
-        } else {
-          document.getElementById('feedback').textContent = '答對了！繼續加油！';
-        }
-        document.getElementById('score').textContent = score;
-        generateQuestion();
-      } else {
-        document.getElementById('feedback').textContent = '答錯了，再試試！';
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      color: var(--white);
+      overflow-x: hidden;
+    }
+
+    /* ===== 通用元件 ===== */
+    .screen {
+      display: none;
+      width: 100%;
+      min-height: 100vh;
+      padding: 20px;
+      padding-bottom: 100px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .btn {
+      padding: 15px 30px;
+      border: none;
+      border-radius: 50px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .btn-primary {
+      background: var(--gradient-1);
+      color: var(--white);
+      box-shadow: 0 5px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(108, 92, 231, 0.6);
+    }
+
+    .btn-secondary {
+      background: var(--gradient-2);
+      color: var(--dark);
+      box-shadow: 0 5px 20px rgba(0, 206, 201, 0.4);
+    }
+
+    .btn-accent {
+      background: var(--gradient-3);
+      color: var(--dark);
+      box-shadow: 0 5px 20px rgba(253, 203, 110, 0.4);
+    }
+
+    .btn-sm {
+      padding: 10px 20px;
+      font-size: 14px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 20px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    /* ===== 頂部導航 ===== */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 15px;
+      margin-bottom: 20px;
+    }
+
+    .currency-display {
+      display: flex;
+      gap: 15px;
+    }
+
+    .currency-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255,255,255,0.1);
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-weight: 700;
+    }
+
+    .currency-icon {
+      font-size: 20px;
+    }
+
+    .player-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .player-level {
+      background: var(--gradient-3);
+      color: var(--dark);
+      padding: 5px 12px;
+      border-radius: 15px;
+      font-weight: 900;
+      font-size: 14px;
+    }
+
+    .player-name {
+      font-weight: 700;
+    }
+
+    .exp-bar-mini {
+      width: 80px;
+      height: 8px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .exp-bar-mini-fill {
+      height: 100%;
+      background: var(--gradient-3);
+      transition: width 0.5s ease;
+    }
+
+    /* ===== 登入/選擇畫面 ===== */
+    #login-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .logo {
+      font-size: 48px;
+      font-weight: 900;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #FDCB6E 0%, #E17055 50%, #6C5CE7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: 0 0 60px rgba(108, 92, 231, 0.5);
+    }
+
+    .logo-subtitle {
+      font-size: 18px;
+      color: var(--light);
+      margin-bottom: 50px;
+    }
+
+    .login-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    .login-btn {
+      padding: 25px;
+      border-radius: 20px;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+    }
+
+    .login-btn .icon {
+      font-size: 40px;
+    }
+
+    /* ===== 角色創建畫面 ===== */
+    #create-avatar-screen {
+      text-align: center;
+    }
+
+    .avatar-selection {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      max-width: 500px;
+      margin: 30px auto;
+    }
+
+    .avatar-option {
+      background: rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 3px solid transparent;
+    }
+
+    .avatar-option:hover {
+      transform: scale(1.05);
+      background: rgba(255,255,255,0.2);
+    }
+
+    .avatar-option.selected {
+      border-color: var(--accent);
+      background: rgba(253, 203, 110, 0.2);
+    }
+
+    .avatar-preview {
+      font-size: 60px;
+      margin-bottom: 10px;
+    }
+
+    .avatar-name-input {
+      padding: 15px 25px;
+      font-size: 20px;
+      border: none;
+      border-radius: 50px;
+      background: rgba(255,255,255,0.1);
+      color: var(--white);
+      text-align: center;
+      width: 100%;
+      max-width: 300px;
+      margin: 20px auto;
+      display: block;
+    }
+
+    .avatar-name-input::placeholder {
+      color: rgba(255,255,255,0.5);
+    }
+
+    /* ===== 主世界地圖 ===== */
+    .world-map {
+      position: relative;
+      padding: 20px;
+    }
+
+    .world-title {
+      text-align: center;
+      font-size: 28px;
+      font-weight: 900;
+      margin-bottom: 30px;
+      text-shadow: 0 0 20px rgba(108, 92, 231, 0.5);
+    }
+
+    .worlds-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .world-card {
+      background: rgba(255,255,255,0.1);
+      border-radius: 25px;
+      padding: 25px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      border: 2px solid rgba(255,255,255,0.1);
+    }
+
+    .world-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      opacity: 0.1;
+      z-index: 0;
+    }
+
+    .world-card.addition::before { background: var(--gradient-2); }
+    .world-card.subtraction::before { background: var(--gradient-1); }
+    .world-card.multiplication::before { background: var(--gradient-3); }
+    .world-card.division::before { background: linear-gradient(135deg, #E17055 0%, #FDCB6E 100%); }
+
+    .world-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow);
+    }
+
+    .world-card.locked {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .world-card.locked:hover {
+      transform: none;
+    }
+
+    .world-icon {
+      font-size: 60px;
+      margin-bottom: 15px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .world-name {
+      font-size: 24px;
+      font-weight: 900;
+      margin-bottom: 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .world-desc {
+      font-size: 14px;
+      color: var(--light);
+      margin-bottom: 15px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .world-progress {
+      background: rgba(255,255,255,0.2);
+      border-radius: 10px;
+      height: 10px;
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
+    }
+
+    .world-progress-fill {
+      height: 100%;
+      border-radius: 10px;
+      transition: width 0.5s ease;
+    }
+
+    .world-card.addition .world-progress-fill { background: var(--gradient-2); }
+    .world-card.subtraction .world-progress-fill { background: var(--gradient-1); }
+    .world-card.multiplication .world-progress-fill { background: var(--gradient-3); }
+    .world-card.division .world-progress-fill { background: linear-gradient(135deg, #E17055 0%, #FDCB6E 100%); }
+
+    .world-stars {
+      margin-top: 10px;
+      font-size: 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .lock-icon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 60px;
+      opacity: 0.8;
+      z-index: 2;
+    }
+
+    /* ===== 關卡選擇 ===== */
+    .level-map {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .level-path {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      position: relative;
+    }
+
+    .level-path::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 4px;
+      background: rgba(255,255,255,0.2);
+      transform: translateX(-50%);
+      z-index: 0;
+    }
+
+    .level-node {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      z-index: 1;
+      border: 4px solid transparent;
+    }
+
+    .level-node.completed {
+      background: var(--gradient-2);
+      box-shadow: 0 0 20px rgba(0, 206, 201, 0.5);
+    }
+
+    .level-node.current {
+      background: var(--gradient-3);
+      box-shadow: 0 0 30px rgba(253, 203, 110, 0.7);
+      animation: pulse 2s infinite;
+    }
+
+    .level-node.locked {
+      background: rgba(255,255,255,0.1);
+      cursor: not-allowed;
+    }
+
+    .level-node.boss {
+      width: 100px;
+      height: 100px;
+      font-size: 40px;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    .level-info {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 100;
+      transition: all 0.3s ease;
+    }
+
+    .back-btn:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    /* ===== 遊戲畫面 ===== */
+    #game-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .game-container {
+      width: 100%;
+      max-width: 600px;
+      text-align: center;
+    }
+
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding: 15px 20px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 15px;
+    }
+
+    .game-timer {
+      font-size: 32px;
+      font-weight: 900;
+      color: var(--accent);
+    }
+
+    .game-timer.warning {
+      color: var(--danger);
+      animation: blink 0.5s infinite;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0.5; }
+    }
+
+    .game-progress {
+      display: flex;
+      gap: 8px;
+    }
+
+    .progress-dot {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+    }
+
+    .progress-dot.correct {
+      background: var(--success);
+    }
+
+    .progress-dot.wrong {
+      background: var(--danger);
+    }
+
+    .progress-dot.current {
+      background: var(--accent);
+      animation: pulse 1s infinite;
+    }
+
+    .game-question-card {
+      background: rgba(255,255,255,0.1);
+      border-radius: 30px;
+      padding: 40px;
+      margin-bottom: 30px;
+    }
+
+    .game-question {
+      font-size: 56px;
+      font-weight: 900;
+      margin-bottom: 30px;
+      text-shadow: 0 0 30px rgba(108, 92, 231, 0.5);
+    }
+
+    .game-input {
+      width: 100%;
+      padding: 20px;
+      font-size: 36px;
+      text-align: center;
+      border: none;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.9);
+      color: var(--dark);
+      font-weight: 700;
+    }
+
+    .game-input:focus {
+      outline: none;
+      box-shadow: 0 0 30px rgba(253, 203, 110, 0.5);
+    }
+
+    .game-keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    .keypad-btn {
+      padding: 20px;
+      font-size: 28px;
+      font-weight: 700;
+      border: none;
+      border-radius: 15px;
+      background: rgba(255,255,255,0.1);
+      color: var(--white);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .keypad-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+
+    .keypad-btn:active {
+      transform: scale(0.95);
+    }
+
+    .keypad-btn.submit {
+      background: var(--gradient-2);
+      color: var(--dark);
+    }
+
+    .keypad-btn.clear {
+      background: var(--gradient-1);
+    }
+
+    .keypad-btn.negative {
+      background: rgba(225, 112, 85, 0.5);
+    }
+
+    /* ===== 結果畫面 ===== */
+    .result-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .result-card {
+      background: rgba(255,255,255,0.1);
+      border-radius: 30px;
+      padding: 40px;
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+    }
+
+    .result-icon {
+      font-size: 80px;
+      margin-bottom: 20px;
+    }
+
+    .result-title {
+      font-size: 32px;
+      font-weight: 900;
+      margin-bottom: 20px;
+    }
+
+    .result-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .stat-item {
+      background: rgba(255,255,255,0.1);
+      padding: 15px;
+      border-radius: 15px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 900;
+      color: var(--accent);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--light);
+    }
+
+    .rewards-section {
+      background: rgba(253, 203, 110, 0.2);
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .reward-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    /* ===== 任務畫面 ===== */
+    .quest-section {
+      margin-bottom: 30px;
+    }
+
+    .quest-section-title {
+      font-size: 20px;
+      font-weight: 900;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .quest-card {
+      background: rgba(255,255,255,0.1);
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      transition: all 0.3s ease;
+    }
+
+    .quest-card:hover {
+      background: rgba(255,255,255,0.15);
+    }
+
+    .quest-icon {
+      font-size: 40px;
+    }
+
+    .quest-info {
+      flex: 1;
+    }
+
+    .quest-name {
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .quest-progress-bar {
+      background: rgba(255,255,255,0.2);
+      height: 8px;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .quest-progress-fill {
+      height: 100%;
+      background: var(--gradient-2);
+      transition: width 0.3s ease;
+    }
+
+    .quest-reward {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .quest-card.completed {
+      opacity: 0.6;
+    }
+
+    .quest-card.completed .quest-progress-fill {
+      background: var(--success);
+    }
+
+    /* ===== 商店畫面 ===== */
+    .shop-categories {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      padding-bottom: 10px;
+    }
+
+    .shop-category {
+      padding: 10px 20px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: var(--white);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.3s ease;
+    }
+
+    .shop-category.active {
+      background: var(--gradient-3);
+      color: var(--dark);
+    }
+
+    .shop-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 15px;
+    }
+
+    .shop-item {
+      background: rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+
+    .shop-item:hover {
+      transform: translateY(-5px);
+      background: rgba(255,255,255,0.15);
+    }
+
+    .shop-item.owned {
+      border-color: var(--success);
+    }
+
+    .shop-item.equipped {
+      border-color: var(--accent);
+      background: rgba(253, 203, 110, 0.2);
+    }
+
+    .shop-item-icon {
+      font-size: 50px;
+      margin-bottom: 10px;
+    }
+
+    .shop-item-name {
+      font-weight: 700;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    .shop-item-price {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .shop-item-price.owned {
+      color: var(--success);
+    }
+
+    /* ===== 角色畫面 ===== */
+    .avatar-display {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .avatar-big {
+      font-size: 120px;
+      margin-bottom: 20px;
+    }
+
+    .avatar-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      max-width: 400px;
+      margin: 0 auto 30px;
+    }
+
+    .avatar-stat {
+      background: rgba(255,255,255,0.1);
+      border-radius: 15px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .avatar-stat-value {
+      font-size: 32px;
+      font-weight: 900;
+      color: var(--accent);
+    }
+
+    .avatar-stat-label {
+      font-size: 14px;
+      color: var(--light);
+    }
+
+    .exp-bar {
+      background: rgba(255,255,255,0.2);
+      border-radius: 15px;
+      height: 25px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .exp-bar-fill {
+      height: 100%;
+      background: var(--gradient-3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 12px;
+      transition: width 0.5s ease;
+    }
+
+    .equipment-section {
+      margin-top: 30px;
+    }
+
+    .equipment-slots {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .equipment-slot {
+      width: 80px;
+      height: 80px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .equipment-slot:hover {
+      background: rgba(255,255,255,0.2);
+    }
+
+    .equipment-slot-icon {
+      font-size: 30px;
+    }
+
+    .equipment-slot-label {
+      font-size: 10px;
+      color: var(--light);
+    }
+
+    /* ===== 底部導航 ===== */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0,0,0,0.9);
+      backdrop-filter: blur(10px);
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 20px;
+      padding-bottom: max(10px, env(safe-area-inset-bottom));
+      z-index: 100;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      padding: 10px 20px;
+      border-radius: 15px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: transparent;
+      border: none;
+      color: var(--light);
+    }
+
+    .nav-item.active {
+      background: rgba(255,255,255,0.1);
+      color: var(--accent);
+    }
+
+    .nav-icon {
+      font-size: 24px;
+    }
+
+    .nav-label {
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    /* ===== 家長端樣式 ===== */
+    .parent-header {
+      background: var(--gradient-1);
+      margin: -20px -20px 20px -20px;
+      padding: 30px 20px;
+      text-align: center;
+    }
+
+    .parent-title {
+      font-size: 24px;
+      font-weight: 900;
+    }
+
+    .parent-subtitle {
+      font-size: 14px;
+      opacity: 0.8;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .stat-card-value {
+      font-size: 36px;
+      font-weight: 900;
+      color: var(--accent);
+    }
+
+    .stat-card-label {
+      font-size: 14px;
+      color: var(--light);
+    }
+
+    .chart-container {
+      background: rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .chart-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 15px;
+    }
+
+    .chart-bars {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-around;
+      height: 150px;
+      gap: 10px;
+    }
+
+    .chart-bar {
+      flex: 1;
+      background: var(--gradient-2);
+      border-radius: 10px 10px 0 0;
+      position: relative;
+      transition: height 0.5s ease;
+    }
+
+    .chart-bar-label {
+      position: absolute;
+      bottom: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      color: var(--light);
+    }
+
+    .settings-section {
+      margin-bottom: 30px;
+    }
+
+    .settings-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 15px;
+    }
+
+    .setting-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 15px;
+      margin-bottom: 10px;
+    }
+
+    .setting-label {
+      font-weight: 700;
+    }
+
+    .setting-value {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .toggle-switch {
+      width: 50px;
+      height: 26px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 13px;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .toggle-switch.active {
+      background: var(--success);
+    }
+
+    .toggle-switch::after {
+      content: '';
+      width: 22px;
+      height: 22px;
+      background: var(--white);
+      border-radius: 50%;
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      transition: all 0.3s ease;
+    }
+
+    .toggle-switch.active::after {
+      left: 26px;
+    }
+
+    .number-input {
+      width: 80px;
+      padding: 8px;
+      border: none;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.2);
+      color: var(--white);
+      text-align: center;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .mastery-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .mastery-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 15px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 15px;
+    }
+
+    .mastery-icon {
+      font-size: 30px;
+    }
+
+    .mastery-info {
+      flex: 1;
+    }
+
+    .mastery-name {
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .mastery-bar {
+      background: rgba(255,255,255,0.2);
+      height: 10px;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .mastery-fill {
+      height: 100%;
+      border-radius: 5px;
+      transition: width 0.5s ease;
+    }
+
+    .mastery-fill.low { background: var(--danger); }
+    .mastery-fill.medium { background: var(--accent); }
+    .mastery-fill.high { background: var(--success); }
+
+    .mastery-percent {
+      font-weight: 700;
+      min-width: 50px;
+      text-align: right;
+    }
+
+    .logout-btn {
+      width: 100%;
+      margin-top: 30px;
+    }
+
+    /* ===== 響應式設計 ===== */
+    @media (max-width: 600px) {
+      .logo {
+        font-size: 36px;
+      }
+
+      .game-question {
+        font-size: 40px;
+      }
+
+      .avatar-selection {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .top-bar {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .currency-display {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .player-info {
+        width: 100%;
+        justify-content: center;
       }
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('submitAnswer').addEventListener('click', checkAnswer);
-      generateQuestion();
-    });
-  </script>
+    /* ===== 動畫效果 ===== */
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(253, 203, 110, 0.5); }
+      50% { box-shadow: 0 0 40px rgba(253, 203, 110, 0.8); }
+    }
+
+    .bounce { animation: bounce 0.5s ease; }
+    .shake { animation: shake 0.3s ease; }
+    .glow { animation: glow 2s infinite; }
+
+    /* ===== 隱藏元素 ===== */
+    .hidden {
+      display: none !important;
+    }
+  </style>
 </head>
 <body>
-  <h1>三年級數學闖關遊戲</h1>
-  <p>關卡：<span id="level">1</span></p>
-  <p>得分：<span id="score">0</span></p>
-  <p id="question"></p>
-  <input type="number" id="answerInput" placeholder="輸入答案">
-  <button id="submitAnswer">確認</button>
-  <p id="feedback"></p>
+  <!-- ===== 登入畫面 ===== -->
+  <div id="login-screen" class="screen active">
+    <div class="logo">JaxonLearn</div>
+    <div class="logo-subtitle">數學冒險王國</div>
+    <div class="login-buttons">
+      <button class="btn login-btn btn-primary" onclick="showKidLogin()">
+        <span class="icon">🎮</span>
+        <span>小勇士入口</span>
+      </button>
+      <button class="btn login-btn btn-secondary" onclick="showParentLogin()">
+        <span class="icon">👨‍👩‍👧</span>
+        <span>家長入口</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== 角色創建畫面 ===== -->
+  <div id="create-avatar-screen" class="screen">
+    <h1 style="text-align: center; margin-bottom: 10px;">選擇你的角色</h1>
+    <p style="text-align: center; color: var(--light); margin-bottom: 20px;">挑選一個最酷的角色開始冒險！</p>
+
+    <div class="avatar-selection" id="avatar-selection">
+      <div class="avatar-option" data-avatar="🦸‍♂️" onclick="selectAvatar(this)">
+        <div class="avatar-preview">🦸‍♂️</div>
+        <div>超級英雄</div>
+      </div>
+      <div class="avatar-option" data-avatar="🧙‍♂️" onclick="selectAvatar(this)">
+        <div class="avatar-preview">🧙‍♂️</div>
+        <div>魔法師</div>
+      </div>
+      <div class="avatar-option" data-avatar="🥷" onclick="selectAvatar(this)">
+        <div class="avatar-preview">🥷</div>
+        <div>忍者</div>
+      </div>
+      <div class="avatar-option" data-avatar="🤖" onclick="selectAvatar(this)">
+        <div class="avatar-preview">🤖</div>
+        <div>機器人</div>
+      </div>
+      <div class="avatar-option" data-avatar="🧑‍🚀" onclick="selectAvatar(this)">
+        <div class="avatar-preview">🧑‍🚀</div>
+        <div>太空人</div>
+      </div>
+      <div class="avatar-option" data-avatar="🦊" onclick="selectAvatar(this)">
+        <div class="avatar-preview">🦊</div>
+        <div>狐狸俠</div>
+      </div>
+    </div>
+
+    <input type="text" class="avatar-name-input" id="player-name-input" placeholder="輸入你的暱稱" maxlength="10">
+
+    <div style="text-align: center; margin-top: 20px;">
+      <button class="btn btn-accent" onclick="createAvatar()">開始冒險！</button>
+    </div>
+  </div>
+
+  <!-- ===== 孩子端主畫面 ===== -->
+  <div id="kid-main-screen" class="screen">
+    <div class="top-bar">
+      <div class="currency-display">
+        <div class="currency-item">
+          <span class="currency-icon">🪙</span>
+          <span id="display-coins">0</span>
+        </div>
+        <div class="currency-item">
+          <span class="currency-icon">⚡</span>
+          <span id="display-energy">100</span>
+        </div>
+      </div>
+      <div class="player-info">
+        <span class="player-level" id="display-level">Lv.1</span>
+        <span class="player-name" id="display-name">勇士</span>
+        <div class="exp-bar-mini">
+          <div class="exp-bar-mini-fill" id="display-exp-bar" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 世界地圖 -->
+    <div id="world-map-view" class="world-map">
+      <h1 class="world-title">🗺️ 選擇你的冒險世界</h1>
+      <div class="worlds-container" id="worlds-container"></div>
+    </div>
+
+    <!-- 關卡選擇 -->
+    <div id="level-select-view" class="hidden">
+      <button class="back-btn" onclick="backToWorldMap()">←</button>
+      <h1 class="world-title" id="current-world-title">加法村</h1>
+      <div class="level-map">
+        <div class="level-path" id="level-path"></div>
+      </div>
+    </div>
+
+    <!-- 底部導航 -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-tab="map" onclick="switchTab('map')">
+        <span class="nav-icon">🗺️</span>
+        <span class="nav-label">地圖</span>
+      </button>
+      <button class="nav-item" data-tab="quest" onclick="switchTab('quest')">
+        <span class="nav-icon">📜</span>
+        <span class="nav-label">任務</span>
+      </button>
+      <button class="nav-item" data-tab="shop" onclick="switchTab('shop')">
+        <span class="nav-icon">🏪</span>
+        <span class="nav-label">商店</span>
+      </button>
+      <button class="nav-item" data-tab="avatar" onclick="switchTab('avatar')">
+        <span class="nav-icon">👤</span>
+        <span class="nav-label">角色</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ===== 任務畫面 ===== -->
+  <div id="quest-screen" class="screen">
+    <div class="top-bar">
+      <div class="currency-display">
+        <div class="currency-item">
+          <span class="currency-icon">🪙</span>
+          <span class="coins-display">0</span>
+        </div>
+        <div class="currency-item">
+          <span class="currency-icon">⚡</span>
+          <span class="energy-display">100</span>
+        </div>
+      </div>
+    </div>
+
+    <h1 style="text-align: center; margin-bottom: 20px;">📜 任務中心</h1>
+
+    <div class="quest-section">
+      <div class="quest-section-title">🌟 每日任務</div>
+      <div id="daily-quests"></div>
+    </div>
+
+    <div class="quest-section">
+      <div class="quest-section-title">⚔️ 主線任務</div>
+      <div id="main-quests"></div>
+    </div>
+
+    <nav class="bottom-nav">
+      <button class="nav-item" data-tab="map" onclick="switchTab('map')">
+        <span class="nav-icon">🗺️</span>
+        <span class="nav-label">地圖</span>
+      </button>
+      <button class="nav-item active" data-tab="quest" onclick="switchTab('quest')">
+        <span class="nav-icon">📜</span>
+        <span class="nav-label">任務</span>
+      </button>
+      <button class="nav-item" data-tab="shop" onclick="switchTab('shop')">
+        <span class="nav-icon">🏪</span>
+        <span class="nav-label">商店</span>
+      </button>
+      <button class="nav-item" data-tab="avatar" onclick="switchTab('avatar')">
+        <span class="nav-icon">👤</span>
+        <span class="nav-label">角色</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ===== 商店畫面 ===== -->
+  <div id="shop-screen" class="screen">
+    <div class="top-bar">
+      <div class="currency-display">
+        <div class="currency-item">
+          <span class="currency-icon">🪙</span>
+          <span class="coins-display">0</span>
+        </div>
+      </div>
+    </div>
+
+    <h1 style="text-align: center; margin-bottom: 20px;">🏪 造型商店</h1>
+
+    <div class="shop-categories">
+      <button class="shop-category active" data-category="hair" onclick="switchShopCategory('hair')">髮型</button>
+      <button class="shop-category" data-category="clothes" onclick="switchShopCategory('clothes')">衣服</button>
+      <button class="shop-category" data-category="accessory" onclick="switchShopCategory('accessory')">配件</button>
+      <button class="shop-category" data-category="pet" onclick="switchShopCategory('pet')">寵物</button>
+    </div>
+
+    <div class="shop-grid" id="shop-items"></div>
+
+    <nav class="bottom-nav">
+      <button class="nav-item" data-tab="map" onclick="switchTab('map')">
+        <span class="nav-icon">🗺️</span>
+        <span class="nav-label">地圖</span>
+      </button>
+      <button class="nav-item" data-tab="quest" onclick="switchTab('quest')">
+        <span class="nav-icon">📜</span>
+        <span class="nav-label">任務</span>
+      </button>
+      <button class="nav-item active" data-tab="shop" onclick="switchTab('shop')">
+        <span class="nav-icon">🏪</span>
+        <span class="nav-label">商店</span>
+      </button>
+      <button class="nav-item" data-tab="avatar" onclick="switchTab('avatar')">
+        <span class="nav-icon">👤</span>
+        <span class="nav-label">角色</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ===== 角色畫面 ===== -->
+  <div id="avatar-screen" class="screen">
+    <div class="avatar-display">
+      <div class="avatar-big" id="avatar-display-big">🦸‍♂️</div>
+      <h2 id="avatar-display-name">勇士</h2>
+      <div class="player-level" id="avatar-display-level" style="display: inline-block; margin-top: 10px;">Lv.1</div>
+    </div>
+
+    <div class="exp-bar">
+      <div class="exp-bar-fill" id="avatar-exp-bar" style="width: 0%">0 / 100 EXP</div>
+    </div>
+
+    <div class="avatar-stats">
+      <div class="avatar-stat">
+        <div class="avatar-stat-value" id="stat-total-stars">0</div>
+        <div class="avatar-stat-label">獲得星星</div>
+      </div>
+      <div class="avatar-stat">
+        <div class="avatar-stat-value" id="stat-total-levels">0</div>
+        <div class="avatar-stat-label">完成關卡</div>
+      </div>
+      <div class="avatar-stat">
+        <div class="avatar-stat-value" id="stat-accuracy">0%</div>
+        <div class="avatar-stat-label">正確率</div>
+      </div>
+      <div class="avatar-stat">
+        <div class="avatar-stat-value" id="stat-streak">0</div>
+        <div class="avatar-stat-label">連續登入</div>
+      </div>
+    </div>
+
+    <div class="equipment-section">
+      <h3 style="text-align: center; margin-bottom: 15px;">裝備欄</h3>
+      <div class="equipment-slots">
+        <div class="equipment-slot" id="equip-hair">
+          <span class="equipment-slot-icon">💇</span>
+          <span class="equipment-slot-label">髮型</span>
+        </div>
+        <div class="equipment-slot" id="equip-clothes">
+          <span class="equipment-slot-icon">👕</span>
+          <span class="equipment-slot-label">衣服</span>
+        </div>
+        <div class="equipment-slot" id="equip-accessory">
+          <span class="equipment-slot-icon">🎀</span>
+          <span class="equipment-slot-label">配件</span>
+        </div>
+        <div class="equipment-slot" id="equip-pet">
+          <span class="equipment-slot-icon">🐾</span>
+          <span class="equipment-slot-label">寵物</span>
+        </div>
+      </div>
+    </div>
+
+    <nav class="bottom-nav">
+      <button class="nav-item" data-tab="map" onclick="switchTab('map')">
+        <span class="nav-icon">🗺️</span>
+        <span class="nav-label">地圖</span>
+      </button>
+      <button class="nav-item" data-tab="quest" onclick="switchTab('quest')">
+        <span class="nav-icon">📜</span>
+        <span class="nav-label">任務</span>
+      </button>
+      <button class="nav-item" data-tab="shop" onclick="switchTab('shop')">
+        <span class="nav-icon">🏪</span>
+        <span class="nav-label">商店</span>
+      </button>
+      <button class="nav-item active" data-tab="avatar" onclick="switchTab('avatar')">
+        <span class="nav-icon">👤</span>
+        <span class="nav-label">角色</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ===== 遊戲畫面 ===== -->
+  <div id="game-screen" class="screen">
+    <div class="game-container">
+      <div class="game-header">
+        <div class="game-timer" id="game-timer">60</div>
+        <div class="game-progress" id="game-progress"></div>
+        <div style="font-weight: 700;">
+          關卡 <span id="game-level-display">1</span>
+        </div>
+      </div>
+
+      <div class="game-question-card">
+        <div class="game-question" id="game-question">12 + 8</div>
+        <input type="text" class="game-input" id="game-input" inputmode="numeric" pattern="[0-9-]*" readonly>
+      </div>
+
+      <div class="game-keypad">
+        <button class="keypad-btn" onclick="inputNumber('1')">1</button>
+        <button class="keypad-btn" onclick="inputNumber('2')">2</button>
+        <button class="keypad-btn" onclick="inputNumber('3')">3</button>
+        <button class="keypad-btn" onclick="inputNumber('4')">4</button>
+        <button class="keypad-btn" onclick="inputNumber('5')">5</button>
+        <button class="keypad-btn" onclick="inputNumber('6')">6</button>
+        <button class="keypad-btn" onclick="inputNumber('7')">7</button>
+        <button class="keypad-btn" onclick="inputNumber('8')">8</button>
+        <button class="keypad-btn" onclick="inputNumber('9')">9</button>
+        <button class="keypad-btn negative" onclick="inputNumber('-')">−</button>
+        <button class="keypad-btn" onclick="inputNumber('0')">0</button>
+        <button class="keypad-btn clear" onclick="clearInput()">⌫</button>
+        <button class="keypad-btn submit" onclick="submitAnswer()" style="grid-column: span 3;">確認答案</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 結果彈窗 ===== -->
+  <div id="result-overlay" class="result-overlay hidden">
+    <div class="result-card">
+      <div class="result-icon" id="result-icon">🎉</div>
+      <div class="result-title" id="result-title">太棒了！</div>
+
+      <div class="result-stats">
+        <div class="stat-item">
+          <div class="stat-value" id="result-correct">5</div>
+          <div class="stat-label">答對題數</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="result-time">45秒</div>
+          <div class="stat-label">完成時間</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="result-accuracy">100%</div>
+          <div class="stat-label">正確率</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="result-stars">⭐⭐⭐</div>
+          <div class="stat-label">獲得星星</div>
+        </div>
+      </div>
+
+      <div class="rewards-section">
+        <div class="reward-item">
+          <span>🪙</span>
+          <span id="result-coins">+50</span>
+          <span>金幣</span>
+        </div>
+        <div class="reward-item">
+          <span>✨</span>
+          <span id="result-exp">+30</span>
+          <span>經驗值</span>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="closeResult()" style="width: 100%;">繼續冒險</button>
+    </div>
+  </div>
+
+  <!-- ===== 家長端畫面 ===== -->
+  <div id="parent-screen" class="screen">
+    <div class="parent-header">
+      <div class="parent-title">👨‍👩‍👧 家長控制台</div>
+      <div class="parent-subtitle">JaxonLearn 學習管理系統</div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-card-value" id="parent-total-time">0</div>
+        <div class="stat-card-label">今日學習(分鐘)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-value" id="parent-total-levels">0</div>
+        <div class="stat-card-label">完成關卡</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-value" id="parent-accuracy">0%</div>
+        <div class="stat-card-label">正確率</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-value" id="parent-streak">0</div>
+        <div class="stat-card-label">連續登入</div>
+      </div>
+    </div>
+
+    <div class="chart-container">
+      <div class="chart-title">📊 本週學習時間</div>
+      <div class="chart-bars" id="weekly-chart"></div>
+    </div>
+
+    <div class="chart-container">
+      <div class="chart-title">📈 技能掌握度</div>
+      <div class="mastery-list" id="mastery-list"></div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-title">⚙️ 設定</div>
+
+      <div class="setting-item">
+        <span class="setting-label">每日時間限制</span>
+        <div class="setting-value">
+          <input type="number" class="number-input" id="time-limit" value="60" min="10" max="180"> 分鐘
+        </div>
+      </div>
+
+      <div class="setting-item">
+        <span class="setting-label">每日關卡上限</span>
+        <div class="setting-value">
+          <input type="number" class="number-input" id="level-limit" value="20" min="5" max="50"> 關
+        </div>
+      </div>
+
+      <div class="setting-item">
+        <span class="setting-label">允許社交功能</span>
+        <div class="setting-value">
+          <div class="toggle-switch" id="social-toggle" onclick="toggleSetting('social')"></div>
+        </div>
+      </div>
+
+      <div class="setting-item">
+        <span class="setting-label">顯示排行榜</span>
+        <div class="setting-value">
+          <div class="toggle-switch" id="leaderboard-toggle" onclick="toggleSetting('leaderboard')"></div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="saveParentSettings()" style="width: 100%; margin-bottom: 15px;">儲存設定</button>
+    <button class="btn btn-secondary logout-btn" onclick="parentLogout()">返回首頁</button>
+  </div>
+
+  <!-- ===== Firebase SDK ===== -->
+  <script type="module">
+    // Firebase 配置
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBFVYr5xZ9r5THe5ZJL9iG3cyrvLsyQzGg",
+      authDomain: "jaxonlearn-47d74.firebaseapp.com",
+      projectId: "jaxonlearn-47d74",
+      storageBucket: "jaxonlearn-47d74.firebasestorage.app",
+      messagingSenderId: "155229206941",
+      appId: "1:155229206941:web:5cc0a06af8c0956a9fc328"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // ========== 遊戲狀態 ==========
+    window.gameState = {
+      // 玩家基本資料
+      playerId: localStorage.getItem('jaxon_player_id') || null,
+      playerName: '勇士',
+      avatar: '🦸‍♂️',
+      level: 1,
+      exp: 0,
+      expToNext: 100,
+      coins: 0,
+      energy: 100,
+      maxEnergy: 100,
+
+      // 遊戲進度
+      worldProgress: {
+        addition: { unlocked: true, completed: 0, stars: 0 },
+        subtraction: { unlocked: false, completed: 0, stars: 0 },
+        multiplication: { unlocked: false, completed: 0, stars: 0 },
+        division: { unlocked: false, completed: 0, stars: 0 }
+      },
+
+      // 統計數據
+      stats: {
+        totalStars: 0,
+        totalLevels: 0,
+        totalCorrect: 0,
+        totalQuestions: 0,
+        loginStreak: 0,
+        lastLogin: null,
+        todayPlayTime: 0,
+        weeklyPlayTime: [0, 0, 0, 0, 0, 0, 0]
+      },
+
+      // 擁有的物品
+      inventory: {
+        hair: [],
+        clothes: [],
+        accessory: [],
+        pet: []
+      },
+
+      // 裝備中的物品
+      equipped: {
+        hair: null,
+        clothes: null,
+        accessory: null,
+        pet: null
+      },
+
+      // 任務進度
+      quests: {
+        daily: [],
+        main: []
+      },
+
+      // 家長設定
+      parentSettings: {
+        timeLimit: 60,
+        levelLimit: 20,
+        socialEnabled: false,
+        leaderboardEnabled: false
+      },
+
+      // 當前遊戲狀態
+      currentWorld: null,
+      currentLevel: 0,
+      currentGame: null
+    };
+
+    // ========== 世界配置 ==========
+    const WORLDS = {
+      addition: {
+        id: 'addition',
+        name: '加法村',
+        icon: '🏡',
+        desc: '在和平的村莊學習加法的奧秘',
+        color: 'addition',
+        levels: 10,
+        unlockRequirement: null,
+        generateQuestion: (level) => {
+          const max = 10 + level * 5;
+          const a = Math.floor(Math.random() * max) + 1;
+          const b = Math.floor(Math.random() * max) + 1;
+          return { question: `${a} + ${b}`, answer: a + b };
+        }
+      },
+      subtraction: {
+        id: 'subtraction',
+        name: '減法森林',
+        icon: '🌲',
+        desc: '在神秘森林中挑戰減法難題',
+        color: 'subtraction',
+        levels: 10,
+        unlockRequirement: { world: 'addition', level: 5 },
+        generateQuestion: (level) => {
+          const max = 10 + level * 5;
+          const a = Math.floor(Math.random() * max) + 10;
+          const b = Math.floor(Math.random() * Math.min(a, max)) + 1;
+          return { question: `${a} - ${b}`, answer: a - b };
+        }
+      },
+      multiplication: {
+        id: 'multiplication',
+        name: '乘法城堡',
+        icon: '🏰',
+        desc: '攻占城堡，征服乘法！',
+        color: 'multiplication',
+        levels: 10,
+        unlockRequirement: { world: 'subtraction', level: 5 },
+        generateQuestion: (level) => {
+          const max = Math.min(2 + level, 12);
+          const a = Math.floor(Math.random() * max) + 1;
+          const b = Math.floor(Math.random() * max) + 1;
+          return { question: `${a} × ${b}`, answer: a * b };
+        }
+      },
+      division: {
+        id: 'division',
+        name: '除法火山',
+        icon: '🌋',
+        desc: '在火山深處破解除法密碼',
+        color: 'division',
+        levels: 10,
+        unlockRequirement: { world: 'multiplication', level: 5 },
+        generateQuestion: (level) => {
+          const max = Math.min(2 + level, 12);
+          const b = Math.floor(Math.random() * max) + 1;
+          const answer = Math.floor(Math.random() * max) + 1;
+          const a = b * answer;
+          return { question: `${a} ÷ ${b}`, answer: answer };
+        }
+      }
+    };
+
+    // ========== 商店物品 ==========
+    const SHOP_ITEMS = {
+      hair: [
+        { id: 'hair1', name: '酷炫刺蝟頭', icon: '💇‍♂️', price: 50 },
+        { id: 'hair2', name: '帥氣飛機頭', icon: '💇', price: 80 },
+        { id: 'hair3', name: '霸氣獅子頭', icon: '🦁', price: 150 },
+        { id: 'hair4', name: '彩虹髮', icon: '🌈', price: 200 }
+      ],
+      clothes: [
+        { id: 'clothes1', name: '超級英雄裝', icon: '🦸', price: 100 },
+        { id: 'clothes2', name: '太空裝', icon: '👨‍🚀', price: 150 },
+        { id: 'clothes3', name: '忍者服', icon: '🥷', price: 120 },
+        { id: 'clothes4', name: '皇家盔甲', icon: '🛡️', price: 250 }
+      ],
+      accessory: [
+        { id: 'acc1', name: '酷酷墨鏡', icon: '🕶️', price: 30 },
+        { id: 'acc2', name: '閃亮皇冠', icon: '👑', price: 200 },
+        { id: 'acc3', name: '神秘面具', icon: '🎭', price: 80 },
+        { id: 'acc4', name: '翅膀背飾', icon: '🪽', price: 300 }
+      ],
+      pet: [
+        { id: 'pet1', name: '小狗夥伴', icon: '🐕', price: 150 },
+        { id: 'pet2', name: '貓咪助手', icon: '🐈', price: 150 },
+        { id: 'pet3', name: '火龍寶寶', icon: '🐉', price: 500 },
+        { id: 'pet4', name: '獨角獸', icon: '🦄', price: 800 }
+      ]
+    };
+
+    // ========== 任務系統 ==========
+    function generateDailyQuests() {
+      const quests = [
+        { id: 'daily1', name: '完成3個關卡', icon: '🎯', target: 3, current: 0, reward: 30, type: 'levels' },
+        { id: 'daily2', name: '答對15題', icon: '✅', target: 15, current: 0, reward: 25, type: 'correct' },
+        { id: 'daily3', name: '獲得1顆星星', icon: '⭐', target: 1, current: 0, reward: 20, type: 'stars' }
+      ];
+      return quests;
+    }
+
+    function generateMainQuests() {
+      const quests = [
+        { id: 'main1', name: '完成加法村第1關', icon: '🏡', world: 'addition', level: 1, completed: false, reward: 50 },
+        { id: 'main2', name: '解鎖減法森林', icon: '🌲', world: 'addition', level: 5, completed: false, reward: 100 },
+        { id: 'main3', name: '征服乘法城堡入口', icon: '🏰', world: 'multiplication', level: 1, completed: false, reward: 150 }
+      ];
+      return quests;
+    }
+
+    // ========== 畫面切換 ==========
+    window.showScreen = function(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+
+    window.showKidLogin = function() {
+      if (gameState.playerId) {
+        loadPlayerData().then(() => {
+          showScreen('kid-main-screen');
+          renderWorldMap();
+          updateDisplays();
+        });
+      } else {
+        showScreen('create-avatar-screen');
+      }
+    }
+
+    window.showParentLogin = function() {
+      const password = prompt('請輸入家長密碼（預設：1234）：');
+      if (password === '1234') {
+        showScreen('parent-screen');
+        renderParentDashboard();
+      } else if (password !== null) {
+        alert('密碼錯誤！');
+      }
+    }
+
+    // ========== 角色創建 ==========
+    let selectedAvatar = null;
+
+    window.selectAvatar = function(element) {
+      document.querySelectorAll('.avatar-option').forEach(opt => opt.classList.remove('selected'));
+      element.classList.add('selected');
+      selectedAvatar = element.dataset.avatar;
+    }
+
+    window.createAvatar = async function() {
+      const nameInput = document.getElementById('player-name-input');
+      const name = nameInput.value.trim();
+
+      if (!selectedAvatar) {
+        alert('請選擇一個角色！');
+        return;
+      }
+
+      if (!name) {
+        alert('請輸入你的暱稱！');
+        return;
+      }
+
+      // 創建新玩家
+      const playerId = 'player_' + Date.now();
+      gameState.playerId = playerId;
+      gameState.playerName = name;
+      gameState.avatar = selectedAvatar;
+      gameState.quests.daily = generateDailyQuests();
+      gameState.quests.main = generateMainQuests();
+
+      localStorage.setItem('jaxon_player_id', playerId);
+
+      await savePlayerData();
+
+      showScreen('kid-main-screen');
+      renderWorldMap();
+      updateDisplays();
+    }
+
+    // ========== 資料存取 ==========
+    async function savePlayerData() {
+      if (!gameState.playerId) return;
+
+      try {
+        await setDoc(doc(db, 'players', gameState.playerId), {
+          ...gameState,
+          updatedAt: serverTimestamp()
+        });
+      } catch (error) {
+        console.error('儲存失敗:', error);
+        // 備用本地儲存
+        localStorage.setItem('jaxon_game_state', JSON.stringify(gameState));
+      }
+    }
+
+    async function loadPlayerData() {
+      if (!gameState.playerId) return;
+
+      try {
+        const docSnap = await getDoc(doc(db, 'players', gameState.playerId));
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          Object.assign(gameState, data);
+
+          // 檢查每日任務是否需要重置
+          checkDailyReset();
+        }
+      } catch (error) {
+        console.error('載入失敗:', error);
+        // 嘗試從本地載入
+        const localData = localStorage.getItem('jaxon_game_state');
+        if (localData) {
+          Object.assign(gameState, JSON.parse(localData));
+        }
+      }
+    }
+
+    function checkDailyReset() {
+      const today = new Date().toDateString();
+      const lastLogin = gameState.stats.lastLogin;
+
+      if (lastLogin !== today) {
+        // 重置每日任務
+        gameState.quests.daily = generateDailyQuests();
+        gameState.energy = gameState.maxEnergy;
+        gameState.stats.todayPlayTime = 0;
+
+        // 更新連續登入
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        if (lastLogin === yesterday.toDateString()) {
+          gameState.stats.loginStreak++;
+        } else if (lastLogin !== today) {
+          gameState.stats.loginStreak = 1;
+        }
+
+        gameState.stats.lastLogin = today;
+        savePlayerData();
+      }
+    }
+
+    // ========== 畫面更新 ==========
+    function updateDisplays() {
+      // 更新頂部欄
+      document.getElementById('display-coins').textContent = gameState.coins;
+      document.getElementById('display-energy').textContent = gameState.energy;
+      document.getElementById('display-level').textContent = `Lv.${gameState.level}`;
+      document.getElementById('display-name').textContent = gameState.playerName;
+
+      const expPercent = (gameState.exp / gameState.expToNext) * 100;
+      document.getElementById('display-exp-bar').style.width = `${expPercent}%`;
+
+      // 更新所有金幣顯示
+      document.querySelectorAll('.coins-display').forEach(el => {
+        el.textContent = gameState.coins;
+      });
+
+      document.querySelectorAll('.energy-display').forEach(el => {
+        el.textContent = gameState.energy;
+      });
+    }
+
+    // ========== 世界地圖 ==========
+    function renderWorldMap() {
+      const container = document.getElementById('worlds-container');
+      container.innerHTML = '';
+
+      Object.values(WORLDS).forEach(world => {
+        const progress = gameState.worldProgress[world.id];
+        const isLocked = !progress.unlocked;
+        const progressPercent = (progress.completed / world.levels) * 100;
+
+        const card = document.createElement('div');
+        card.className = `world-card ${world.color} ${isLocked ? 'locked' : ''}`;
+        card.innerHTML = `
+          <div class="world-icon">${world.icon}</div>
+          <div class="world-name">${world.name}</div>
+          <div class="world-desc">${world.desc}</div>
+          <div class="world-progress">
+            <div class="world-progress-fill" style="width: ${progressPercent}%"></div>
+          </div>
+          <div class="world-stars">${'⭐'.repeat(Math.min(progress.stars, 5))}${'☆'.repeat(Math.max(0, 5 - progress.stars))}</div>
+          ${isLocked ? '<div class="lock-icon">🔒</div>' : ''}
+        `;
+
+        if (!isLocked) {
+          card.onclick = () => enterWorld(world.id);
+        }
+
+        container.appendChild(card);
+      });
+    }
+
+    window.enterWorld = function(worldId) {
+      gameState.currentWorld = worldId;
+      document.getElementById('world-map-view').classList.add('hidden');
+      document.getElementById('level-select-view').classList.remove('hidden');
+
+      const world = WORLDS[worldId];
+      document.getElementById('current-world-title').textContent = `${world.icon} ${world.name}`;
+
+      renderLevelPath(worldId);
+    }
+
+    window.backToWorldMap = function() {
+      document.getElementById('level-select-view').classList.add('hidden');
+      document.getElementById('world-map-view').classList.remove('hidden');
+      gameState.currentWorld = null;
+    }
+
+    function renderLevelPath(worldId) {
+      const container = document.getElementById('level-path');
+      container.innerHTML = '';
+
+      const world = WORLDS[worldId];
+      const progress = gameState.worldProgress[worldId];
+
+      for (let i = 1; i <= world.levels; i++) {
+        const isCompleted = i <= progress.completed;
+        const isCurrent = i === progress.completed + 1;
+        const isLocked = i > progress.completed + 1;
+        const isBoss = i === world.levels;
+
+        const node = document.createElement('div');
+        node.className = `level-node ${isCompleted ? 'completed' : ''} ${isCurrent ? 'current' : ''} ${isLocked ? 'locked' : ''} ${isBoss ? 'boss' : ''}`;
+        node.innerHTML = isBoss ? '👑' : i;
+
+        if (!isLocked) {
+          node.onclick = () => startLevel(worldId, i);
+        }
+
+        container.appendChild(node);
+      }
+    }
+
+    // ========== 遊戲邏輯 ==========
+    let gameTimer = null;
+    let gameQuestions = [];
+    let currentQuestionIndex = 0;
+    let gameStartTime = 0;
+    let gameCorrect = 0;
+    let gameWrong = 0;
+
+    window.startLevel = function(worldId, level) {
+      if (gameState.energy < 5) {
+        alert('能量不足！休息一下再來吧～');
+        return;
+      }
+
+      gameState.currentWorld = worldId;
+      gameState.currentLevel = level;
+
+      // 生成題目
+      const world = WORLDS[worldId];
+      gameQuestions = [];
+      const questionCount = 5 + Math.floor(level / 2);
+
+      for (let i = 0; i < questionCount; i++) {
+        gameQuestions.push(world.generateQuestion(level));
+      }
+
+      currentQuestionIndex = 0;
+      gameCorrect = 0;
+      gameWrong = 0;
+      gameStartTime = Date.now();
+
+      // 扣除能量
+      gameState.energy -= 5;
+      updateDisplays();
+
+      showScreen('game-screen');
+      document.getElementById('game-level-display').textContent = level;
+      renderGameProgress();
+      showQuestion();
+      startTimer(60 + level * 10);
+    }
+
+    function startTimer(seconds) {
+      let timeLeft = seconds;
+      const timerEl = document.getElementById('game-timer');
+
+      gameTimer = setInterval(() => {
+        timeLeft--;
+        timerEl.textContent = timeLeft;
+
+        if (timeLeft <= 10) {
+          timerEl.classList.add('warning');
+        }
+
+        if (timeLeft <= 0) {
+          endGame(false);
+        }
+      }, 1000);
+    }
+
+    function renderGameProgress() {
+      const container = document.getElementById('game-progress');
+      container.innerHTML = '';
+
+      gameQuestions.forEach((_, i) => {
+        const dot = document.createElement('div');
+        dot.className = 'progress-dot';
+        if (i < currentQuestionIndex) {
+          dot.classList.add(i < gameCorrect ? 'correct' : 'wrong');
+        } else if (i === currentQuestionIndex) {
+          dot.classList.add('current');
+        }
+        container.appendChild(dot);
+      });
+    }
+
+    function showQuestion() {
+      const q = gameQuestions[currentQuestionIndex];
+      document.getElementById('game-question').textContent = q.question;
+      document.getElementById('game-input').value = '';
+    }
+
+    window.inputNumber = function(num) {
+      const input = document.getElementById('game-input');
+      if (num === '-' && input.value.length > 0) return;
+      if (input.value.length >= 6) return;
+      input.value += num;
+    }
+
+    window.clearInput = function() {
+      const input = document.getElementById('game-input');
+      input.value = input.value.slice(0, -1);
+    }
+
+    window.submitAnswer = function() {
+      const input = document.getElementById('game-input');
+      const userAnswer = parseInt(input.value);
+      const correctAnswer = gameQuestions[currentQuestionIndex].answer;
+
+      if (isNaN(userAnswer)) return;
+
+      if (userAnswer === correctAnswer) {
+        gameCorrect++;
+        document.getElementById('game-question').classList.add('bounce');
+      } else {
+        gameWrong++;
+        document.getElementById('game-question').classList.add('shake');
+      }
+
+      setTimeout(() => {
+        document.getElementById('game-question').classList.remove('bounce', 'shake');
+      }, 500);
+
+      currentQuestionIndex++;
+      renderGameProgress();
+
+      if (currentQuestionIndex >= gameQuestions.length) {
+        endGame(true);
+      } else {
+        showQuestion();
+      }
+    }
+
+    function endGame(completed) {
+      clearInterval(gameTimer);
+
+      const totalTime = Math.floor((Date.now() - gameStartTime) / 1000);
+      const accuracy = Math.round((gameCorrect / gameQuestions.length) * 100);
+
+      // 計算星星
+      let stars = 0;
+      if (accuracy >= 60) stars = 1;
+      if (accuracy >= 80) stars = 2;
+      if (accuracy >= 95) stars = 3;
+
+      // 計算獎勵
+      const baseCoins = 10 * gameState.currentLevel;
+      const bonusCoins = stars * 10;
+      const totalCoins = baseCoins + bonusCoins;
+
+      const baseExp = 15 * gameState.currentLevel;
+      const bonusExp = stars * 5;
+      const totalExp = baseExp + bonusExp;
+
+      // 更新遊戲狀態
+      if (completed && accuracy >= 60) {
+        const worldProgress = gameState.worldProgress[gameState.currentWorld];
+        if (gameState.currentLevel > worldProgress.completed) {
+          worldProgress.completed = gameState.currentLevel;
+        }
+        worldProgress.stars += stars;
+
+        // 檢查解鎖新世界
+        checkWorldUnlocks();
+      }
+
+      gameState.coins += totalCoins;
+      gameState.exp += totalExp;
+      gameState.stats.totalStars += stars;
+      gameState.stats.totalLevels++;
+      gameState.stats.totalCorrect += gameCorrect;
+      gameState.stats.totalQuestions += gameQuestions.length;
+
+      // 檢查升級
+      while (gameState.exp >= gameState.expToNext) {
+        gameState.exp -= gameState.expToNext;
+        gameState.level++;
+        gameState.expToNext = Math.floor(gameState.expToNext * 1.2);
+        gameState.maxEnergy += 10;
+      }
+
+      // 更新任務進度
+      updateQuestProgress('levels', 1);
+      updateQuestProgress('correct', gameCorrect);
+      updateQuestProgress('stars', stars);
+
+      // 顯示結果
+      document.getElementById('result-icon').textContent = accuracy >= 60 ? '🎉' : '💪';
+      document.getElementById('result-title').textContent = accuracy >= 60 ? '太棒了！' : '再接再厲！';
+      document.getElementById('result-correct').textContent = gameCorrect;
+      document.getElementById('result-time').textContent = `${totalTime}秒`;
+      document.getElementById('result-accuracy').textContent = `${accuracy}%`;
+      document.getElementById('result-stars').textContent = '⭐'.repeat(stars) || '—';
+      document.getElementById('result-coins').textContent = `+${totalCoins}`;
+      document.getElementById('result-exp').textContent = `+${totalExp}`;
+
+      document.getElementById('result-overlay').classList.remove('hidden');
+
+      savePlayerData();
+      updateDisplays();
+    }
+
+    function checkWorldUnlocks() {
+      Object.entries(WORLDS).forEach(([worldId, world]) => {
+        if (world.unlockRequirement && !gameState.worldProgress[worldId].unlocked) {
+          const req = world.unlockRequirement;
+          if (gameState.worldProgress[req.world].completed >= req.level) {
+            gameState.worldProgress[worldId].unlocked = true;
+          }
+        }
+      });
+    }
+
+    function updateQuestProgress(type, amount) {
+      gameState.quests.daily.forEach(quest => {
+        if (quest.type === type && quest.current < quest.target) {
+          quest.current = Math.min(quest.current + amount, quest.target);
+
+          // 完成任務獎勵
+          if (quest.current >= quest.target) {
+            gameState.coins += quest.reward;
+          }
+        }
+      });
+    }
+
+    window.closeResult = function() {
+      document.getElementById('result-overlay').classList.add('hidden');
+      showScreen('kid-main-screen');
+      document.getElementById('level-select-view').classList.add('hidden');
+      document.getElementById('world-map-view').classList.remove('hidden');
+      renderWorldMap();
+      updateDisplays();
+    }
+
+    // ========== 導航切換 ==========
+    window.switchTab = function(tab) {
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.toggle('active', item.dataset.tab === tab);
+      });
+
+      if (tab === 'map') {
+        showScreen('kid-main-screen');
+        document.getElementById('level-select-view').classList.add('hidden');
+        document.getElementById('world-map-view').classList.remove('hidden');
+        renderWorldMap();
+      } else if (tab === 'quest') {
+        showScreen('quest-screen');
+        renderQuests();
+      } else if (tab === 'shop') {
+        showScreen('shop-screen');
+        renderShop('hair');
+      } else if (tab === 'avatar') {
+        showScreen('avatar-screen');
+        renderAvatarScreen();
+      }
+
+      updateDisplays();
+    }
+
+    // ========== 任務畫面 ==========
+    function renderQuests() {
+      const dailyContainer = document.getElementById('daily-quests');
+      const mainContainer = document.getElementById('main-quests');
+
+      dailyContainer.innerHTML = '';
+      mainContainer.innerHTML = '';
+
+      gameState.quests.daily.forEach(quest => {
+        const completed = quest.current >= quest.target;
+        const progress = (quest.current / quest.target) * 100;
+
+        const card = document.createElement('div');
+        card.className = `quest-card ${completed ? 'completed' : ''}`;
+        card.innerHTML = `
+          <div class="quest-icon">${quest.icon}</div>
+          <div class="quest-info">
+            <div class="quest-name">${quest.name}</div>
+            <div class="quest-progress-bar">
+              <div class="quest-progress-fill" style="width: ${progress}%"></div>
+            </div>
+            <div style="font-size: 12px; color: var(--light); margin-top: 5px;">${quest.current}/${quest.target}</div>
+          </div>
+          <div class="quest-reward">
+            <span>🪙</span>
+            <span>${completed ? '✓' : quest.reward}</span>
+          </div>
+        `;
+        dailyContainer.appendChild(card);
+      });
+
+      gameState.quests.main.forEach(quest => {
+        const card = document.createElement('div');
+        card.className = `quest-card ${quest.completed ? 'completed' : ''}`;
+        card.innerHTML = `
+          <div class="quest-icon">${quest.icon}</div>
+          <div class="quest-info">
+            <div class="quest-name">${quest.name}</div>
+          </div>
+          <div class="quest-reward">
+            <span>🪙</span>
+            <span>${quest.completed ? '✓' : quest.reward}</span>
+          </div>
+        `;
+        mainContainer.appendChild(card);
+      });
+    }
+
+    // ========== 商店畫面 ==========
+    let currentShopCategory = 'hair';
+
+    window.switchShopCategory = function(category) {
+      currentShopCategory = category;
+      document.querySelectorAll('.shop-category').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.category === category);
+      });
+      renderShop(category);
+    }
+
+    function renderShop(category) {
+      const container = document.getElementById('shop-items');
+      container.innerHTML = '';
+
+      const items = SHOP_ITEMS[category];
+      items.forEach(item => {
+        const owned = gameState.inventory[category].includes(item.id);
+        const equipped = gameState.equipped[category] === item.id;
+
+        const itemEl = document.createElement('div');
+        itemEl.className = `shop-item ${owned ? 'owned' : ''} ${equipped ? 'equipped' : ''}`;
+        itemEl.innerHTML = `
+          <div class="shop-item-icon">${item.icon}</div>
+          <div class="shop-item-name">${item.name}</div>
+          <div class="shop-item-price ${owned ? 'owned' : ''}">
+            ${owned ? (equipped ? '裝備中' : '已擁有') : `<span>🪙</span><span>${item.price}</span>`}
+          </div>
+        `;
+
+        itemEl.onclick = () => {
+          if (!owned) {
+            buyItem(category, item);
+          } else {
+            equipItem(category, item.id);
+          }
+        };
+
+        container.appendChild(itemEl);
+      });
+    }
+
+    function buyItem(category, item) {
+      if (gameState.coins < item.price) {
+        alert('金幣不足！繼續闖關賺取更多金幣吧！');
+        return;
+      }
+
+      if (confirm(`確定要花費 ${item.price} 金幣購買「${item.name}」嗎？`)) {
+        gameState.coins -= item.price;
+        gameState.inventory[category].push(item.id);
+        gameState.equipped[category] = item.id;
+        savePlayerData();
+        updateDisplays();
+        renderShop(category);
+      }
+    }
+
+    function equipItem(category, itemId) {
+      gameState.equipped[category] = gameState.equipped[category] === itemId ? null : itemId;
+      savePlayerData();
+      renderShop(category);
+    }
+
+    // ========== 角色畫面 ==========
+    function renderAvatarScreen() {
+      document.getElementById('avatar-display-big').textContent = gameState.avatar;
+      document.getElementById('avatar-display-name').textContent = gameState.playerName;
+      document.getElementById('avatar-display-level').textContent = `Lv.${gameState.level}`;
+
+      const expPercent = (gameState.exp / gameState.expToNext) * 100;
+      document.getElementById('avatar-exp-bar').style.width = `${expPercent}%`;
+      document.getElementById('avatar-exp-bar').textContent = `${gameState.exp} / ${gameState.expToNext} EXP`;
+
+      document.getElementById('stat-total-stars').textContent = gameState.stats.totalStars;
+      document.getElementById('stat-total-levels').textContent = gameState.stats.totalLevels;
+
+      const accuracy = gameState.stats.totalQuestions > 0
+        ? Math.round((gameState.stats.totalCorrect / gameState.stats.totalQuestions) * 100)
+        : 0;
+      document.getElementById('stat-accuracy').textContent = `${accuracy}%`;
+      document.getElementById('stat-streak').textContent = gameState.stats.loginStreak;
+
+      // 更新裝備顯示
+      Object.entries(gameState.equipped).forEach(([slot, itemId]) => {
+        const slotEl = document.getElementById(`equip-${slot}`);
+        if (itemId) {
+          const item = SHOP_ITEMS[slot].find(i => i.id === itemId);
+          if (item) {
+            slotEl.querySelector('.equipment-slot-icon').textContent = item.icon;
+          }
+        }
+      });
+    }
+
+    // ========== 家長端 ==========
+    function renderParentDashboard() {
+      document.getElementById('parent-total-time').textContent = gameState.stats.todayPlayTime;
+      document.getElementById('parent-total-levels').textContent = gameState.stats.totalLevels;
+
+      const accuracy = gameState.stats.totalQuestions > 0
+        ? Math.round((gameState.stats.totalCorrect / gameState.stats.totalQuestions) * 100)
+        : 0;
+      document.getElementById('parent-accuracy').textContent = `${accuracy}%`;
+      document.getElementById('parent-streak').textContent = gameState.stats.loginStreak;
+
+      // 週學習圖表
+      const chartContainer = document.getElementById('weekly-chart');
+      chartContainer.innerHTML = '';
+      const days = ['日', '一', '二', '三', '四', '五', '六'];
+      const maxTime = Math.max(...gameState.stats.weeklyPlayTime, 1);
+
+      gameState.stats.weeklyPlayTime.forEach((time, i) => {
+        const bar = document.createElement('div');
+        bar.className = 'chart-bar';
+        bar.style.height = `${(time / maxTime) * 100}%`;
+        bar.innerHTML = `<span class="chart-bar-label">${days[i]}</span>`;
+        chartContainer.appendChild(bar);
+      });
+
+      // 技能掌握度
+      const masteryContainer = document.getElementById('mastery-list');
+      masteryContainer.innerHTML = '';
+
+      Object.entries(WORLDS).forEach(([worldId, world]) => {
+        const progress = gameState.worldProgress[worldId];
+        const mastery = Math.round((progress.completed / world.levels) * 100);
+        const masteryClass = mastery < 40 ? 'low' : mastery < 70 ? 'medium' : 'high';
+
+        const item = document.createElement('div');
+        item.className = 'mastery-item';
+        item.innerHTML = `
+          <div class="mastery-icon">${world.icon}</div>
+          <div class="mastery-info">
+            <div class="mastery-name">${world.name}</div>
+            <div class="mastery-bar">
+              <div class="mastery-fill ${masteryClass}" style="width: ${mastery}%"></div>
+            </div>
+          </div>
+          <div class="mastery-percent">${mastery}%</div>
+        `;
+        masteryContainer.appendChild(item);
+      });
+
+      // 設定
+      document.getElementById('time-limit').value = gameState.parentSettings.timeLimit;
+      document.getElementById('level-limit').value = gameState.parentSettings.levelLimit;
+      document.getElementById('social-toggle').classList.toggle('active', gameState.parentSettings.socialEnabled);
+      document.getElementById('leaderboard-toggle').classList.toggle('active', gameState.parentSettings.leaderboardEnabled);
+    }
+
+    window.toggleSetting = function(setting) {
+      const toggle = document.getElementById(`${setting}-toggle`);
+      toggle.classList.toggle('active');
+    }
+
+    window.saveParentSettings = function() {
+      gameState.parentSettings = {
+        timeLimit: parseInt(document.getElementById('time-limit').value) || 60,
+        levelLimit: parseInt(document.getElementById('level-limit').value) || 20,
+        socialEnabled: document.getElementById('social-toggle').classList.contains('active'),
+        leaderboardEnabled: document.getElementById('leaderboard-toggle').classList.contains('active')
+      };
+      savePlayerData();
+      alert('設定已儲存！');
+    }
+
+    window.parentLogout = function() {
+      showScreen('login-screen');
+    }
+
+    // ========== 初始化 ==========
+    window.addEventListener('DOMContentLoaded', () => {
+      // 檢查是否已有玩家資料
+      if (gameState.playerId) {
+        loadPlayerData();
+      }
+    });
+
+    // 鍵盤支援
+    document.addEventListener('keydown', (e) => {
+      if (document.getElementById('game-screen').classList.contains('active')) {
+        if (e.key >= '0' && e.key <= '9') {
+          inputNumber(e.key);
+        } else if (e.key === '-') {
+          inputNumber('-');
+        } else if (e.key === 'Backspace') {
+          clearInput();
+        } else if (e.key === 'Enter') {
+          submitAnswer();
+        }
+      }
+    });
+  </script>
 </body>
 </html>
