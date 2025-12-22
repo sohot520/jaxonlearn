@@ -1678,22 +1678,26 @@
   </div>
 
   <!-- ===== Firebase SDK ===== -->
-  <script type="module">
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+  <script>
     // Firebase 配置
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
-    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBFVYr5xZ9r5THe5ZJL9iG3cyrvLsyQzGg",
-      authDomain: "jaxonlearn-47d74.firebaseapp.com",
-      projectId: "jaxonlearn-47d74",
-      storageBucket: "jaxonlearn-47d74.firebasestorage.app",
-      messagingSenderId: "155229206941",
-      appId: "1:155229206941:web:5cc0a06af8c0956a9fc328"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    let db = null;
+    try {
+      const firebaseConfig = {
+        apiKey: "AIzaSyBFVYr5xZ9r5THe5ZJL9iG3cyrvLsyQzGg",
+        authDomain: "jaxonlearn-47d74.firebaseapp.com",
+        projectId: "jaxonlearn-47d74",
+        storageBucket: "jaxonlearn-47d74.firebasestorage.app",
+        messagingSenderId: "155229206941",
+        appId: "1:155229206941:web:5cc0a06af8c0956a9fc328"
+      };
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+      console.log('Firebase 連接成功！');
+    } catch (e) {
+      console.log('Firebase 離線模式，使用本地儲存');
+    }
 
     // ========== 遊戲狀態 ==========
     window.gameState = {
@@ -1948,38 +1952,50 @@
     async function savePlayerData() {
       if (!gameState.playerId) return;
 
-      try {
-        await setDoc(doc(db, 'players', gameState.playerId), {
-          ...gameState,
-          updatedAt: serverTimestamp()
-        });
-      } catch (error) {
-        console.error('儲存失敗:', error);
-        // 備用本地儲存
-        localStorage.setItem('jaxon_game_state', JSON.stringify(gameState));
+      // 總是先存本地
+      localStorage.setItem('jaxon_game_state', JSON.stringify(gameState));
+
+      // 如果有 Firebase 連接，也存到雲端
+      if (db) {
+        try {
+          await db.collection('players').doc(gameState.playerId).set({
+            ...gameState,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        } catch (error) {
+          console.error('雲端儲存失敗:', error);
+        }
       }
     }
 
     async function loadPlayerData() {
       if (!gameState.playerId) return;
 
-      try {
-        const docSnap = await getDoc(doc(db, 'players', gameState.playerId));
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          Object.assign(gameState, data);
-
-          // 檢查每日任務是否需要重置
-          checkDailyReset();
-        }
-      } catch (error) {
-        console.error('載入失敗:', error);
-        // 嘗試從本地載入
-        const localData = localStorage.getItem('jaxon_game_state');
-        if (localData) {
+      // 先從本地載入
+      const localData = localStorage.getItem('jaxon_game_state');
+      if (localData) {
+        try {
           Object.assign(gameState, JSON.parse(localData));
+        } catch (e) {
+          console.error('本地資料解析失敗');
         }
       }
+
+      // 如果有 Firebase 連接，嘗試從雲端載入
+      if (db) {
+        try {
+          const docSnap = await db.collection('players').doc(gameState.playerId).get();
+          if (docSnap.exists) {
+            const data = docSnap.data();
+            Object.assign(gameState, data);
+          }
+        } catch (error) {
+          console.error('雲端載入失敗，使用本地資料:', error);
+        }
+      }
+
+      // 檢查每日任務是否需要重置
+      checkDailyReset();
     }
 
     function checkDailyReset() {
