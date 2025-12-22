@@ -51,6 +51,16 @@
       display: block;
     }
 
+    /* 無底部導航的畫面 */
+    .screen.no-nav {
+      padding-bottom: 20px;
+    }
+
+    .screen.no-nav.active {
+      display: flex;
+      flex-direction: column;
+    }
+
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
@@ -169,13 +179,23 @@
 
     /* ===== 登入/選擇畫面 ===== */
     #login-screen {
-      display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
       text-align: center;
-      padding: 20px;
+    }
+
+    #create-avatar-screen {
+      justify-content: flex-start;
+      padding-top: 40px;
+    }
+
+    #game-screen {
+      justify-content: center;
+      align-items: center;
+    }
+
+    #parent-screen {
+      padding-bottom: 40px;
     }
 
     .logo {
@@ -1255,7 +1275,7 @@
 </head>
 <body>
   <!-- ===== 登入畫面 ===== -->
-  <div id="login-screen" class="screen active">
+  <div id="login-screen" class="screen no-nav active">
     <div class="logo">JaxonLearn</div>
     <div class="logo-subtitle">數學冒險王國</div>
     <div class="login-buttons">
@@ -1271,7 +1291,7 @@
   </div>
 
   <!-- ===== 角色創建畫面 ===== -->
-  <div id="create-avatar-screen" class="screen">
+  <div id="create-avatar-screen" class="screen no-nav">
     <h1 style="text-align: center; margin-bottom: 10px;">選擇你的角色</h1>
     <p style="text-align: center; color: var(--light); margin-bottom: 20px;">挑選一個最酷的角色開始冒險！</p>
 
@@ -1530,7 +1550,7 @@
   </div>
 
   <!-- ===== 遊戲畫面 ===== -->
-  <div id="game-screen" class="screen">
+  <div id="game-screen" class="screen no-nav">
     <div class="game-container">
       <div class="game-header">
         <div class="game-timer" id="game-timer">60</div>
@@ -1606,7 +1626,7 @@
   </div>
 
   <!-- ===== 家長端畫面 ===== -->
-  <div id="parent-screen" class="screen">
+  <div id="parent-screen" class="screen no-nav">
     <div class="parent-header">
       <div class="parent-title">👨‍👩‍👧 家長控制台</div>
       <div class="parent-subtitle">JaxonLearn 學習管理系統</div>
