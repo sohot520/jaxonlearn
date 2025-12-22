@@ -1903,6 +1903,11 @@
           showScreen('kid-main-screen');
           renderWorldMap();
           updateDisplays();
+        }).catch((error) => {
+          console.error('載入失敗:', error);
+          showScreen('kid-main-screen');
+          renderWorldMap();
+          updateDisplays();
         });
       } else {
         showScreen('create-avatar-screen');
@@ -1929,34 +1934,41 @@
     }
 
     window.createAvatar = async function() {
-      const nameInput = document.getElementById('player-name-input');
-      const name = nameInput.value.trim();
+      try {
+        const nameInput = document.getElementById('player-name-input');
+        const name = nameInput.value.trim();
 
-      if (!selectedAvatar) {
-        alert('請選擇一個角色！');
-        return;
+        if (!selectedAvatar) {
+          alert('請選擇一個角色！');
+          return;
+        }
+
+        if (!name) {
+          alert('請輸入你的暱稱！');
+          return;
+        }
+
+        // 創建新玩家
+        const playerId = 'player_' + Date.now();
+        gameState.playerId = playerId;
+        gameState.playerName = name;
+        gameState.avatar = selectedAvatar;
+        gameState.quests.daily = generateDailyQuests();
+        gameState.quests.main = generateMainQuests();
+        gameState.stats.lastLogin = new Date().toDateString();
+        gameState.stats.loginStreak = 1;
+
+        localStorage.setItem('jaxon_player_id', playerId);
+
+        await savePlayerData();
+
+        showScreen('kid-main-screen');
+        renderWorldMap();
+        updateDisplays();
+      } catch (error) {
+        console.error('創建角色失敗:', error);
+        alert('發生錯誤，請重試！');
       }
-
-      if (!name) {
-        alert('請輸入你的暱稱！');
-        return;
-      }
-
-      // 創建新玩家
-      const playerId = 'player_' + Date.now();
-      gameState.playerId = playerId;
-      gameState.playerName = name;
-      gameState.avatar = selectedAvatar;
-      gameState.quests.daily = generateDailyQuests();
-      gameState.quests.main = generateMainQuests();
-
-      localStorage.setItem('jaxon_player_id', playerId);
-
-      await savePlayerData();
-
-      showScreen('kid-main-screen');
-      renderWorldMap();
-      updateDisplays();
     }
 
     // ========== 資料存取 ==========
@@ -1964,15 +1976,18 @@
       if (!gameState.playerId) return;
 
       // 總是先存本地
-      localStorage.setItem('jaxon_game_state', JSON.stringify(gameState));
+      try {
+        localStorage.setItem('jaxon_game_state', JSON.stringify(gameState));
+      } catch (e) {
+        console.error('本地儲存失敗:', e);
+      }
 
       // 如果有 Firebase 連接，也存到雲端
       if (db) {
         try {
-          await db.collection('players').doc(gameState.playerId).set({
-            ...gameState,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
+          const dataToSave = { ...gameState };
+          dataToSave.updatedAt = new Date().toISOString();
+          await db.collection('players').doc(gameState.playerId).set(dataToSave);
         } catch (error) {
           console.error('雲端儲存失敗:', error);
         }
@@ -1983,13 +1998,13 @@
       if (!gameState.playerId) return;
 
       // 先從本地載入
-      const localData = localStorage.getItem('jaxon_game_state');
-      if (localData) {
-        try {
+      try {
+        const localData = localStorage.getItem('jaxon_game_state');
+        if (localData) {
           Object.assign(gameState, JSON.parse(localData));
-        } catch (e) {
-          console.error('本地資料解析失敗');
         }
+      } catch (e) {
+        console.error('本地資料解析失敗:', e);
       }
 
       // 如果有 Firebase 連接，嘗試從雲端載入
