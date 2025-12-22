@@ -2,72 +2,778 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <title>三年級數學闖關遊戲</title>
+  <title>三年級數學冒險學習機</title>
+  <style>
+    :root {
+      --bg: radial-gradient(circle at 20% 20%, #ffedd5 0, #ffe4c4 25%, #ffe8f1 50%, #e2f3ff 100%);
+      --card: #ffffffdd;
+      --accent: #ff7a59;
+      --accent-2: #3b82f6;
+      --accent-3: #16a34a;
+      --shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+      --ip-1: #ffb703;
+      --ip-2: #fb7185;
+      --ip-3: #22c55e;
+      --text: #233142;
+      --muted: #5c6b7a;
+      font-family: 'Noto Sans TC', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      padding: 32px 24px 12px;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .hero {
+      flex: 1;
+      background: linear-gradient(120deg, #fff0d9 0%, #ffe2ec 40%, #dbeafe 100%);
+      border-radius: 24px;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 12px;
+      box-shadow: var(--shadow);
+      align-items: center;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+
+    .hero p {
+      margin: 6px 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .ip-card {
+      background: #fff;
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.6), var(--shadow);
+    }
+
+    .ip-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .ip-chip span {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px;
+      padding: 0 24px 24px;
+    }
+
+    .panel {
+      background: var(--card);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      backdrop-filter: blur(6px);
+    }
+
+    .grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .two-col {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .big-number {
+      font-size: 30px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .score-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #fff;
+      padding: 8px 12px;
+      border-radius: 12px;
+      font-weight: 700;
+      color: #0f172a;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+    }
+
+    .level-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .card {
+      padding: 12px;
+      background: #fff;
+      border-radius: 16px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+
+    .card.active {
+      border-color: var(--accent);
+      box-shadow: 0 10px 30px rgba(255, 122, 89, 0.2);
+    }
+
+    .card.locked {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .card h3 {
+      margin: 0;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #f3f4f6;
+      color: #111827;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .question-card {
+      padding: 18px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #fff, #fff7ed);
+      border: 1px solid #ffe0b3;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .question-title {
+      margin: 0 0 6px;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .question-text {
+      margin: 8px 0 12px;
+      font-size: 18px;
+      line-height: 1.6;
+      color: #0f172a;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    input[type="number"] {
+      width: 180px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid #cbd5e1;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 12px 16px;
+      border-radius: 14px;
+      border: none;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      font-size: 15px;
+    }
+
+    button.primary {
+      background: linear-gradient(120deg, #ff7a59, #ffb703);
+      color: #0b1524;
+      box-shadow: 0 10px 25px rgba(255, 122, 89, 0.3);
+    }
+
+    button.secondary {
+      background: #0ea5e9;
+      color: #0b1524;
+      box-shadow: 0 10px 25px rgba(14, 165, 233, 0.25);
+    }
+
+    button.ghost {
+      background: #fff;
+      color: #0f172a;
+      border: 1px solid #e2e8f0;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .feedback {
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 14px;
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      color: #0f172a;
+      min-height: 44px;
+    }
+
+    .progress {
+      height: 10px;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 8px 0 6px;
+    }
+
+    .progress span {
+      display: block;
+      height: 100%;
+      background: linear-gradient(120deg, #22c55e, #a3e635);
+      transition: width 0.25s ease;
+    }
+
+    .log {
+      padding: 0;
+      list-style: none;
+      margin: 8px 0 0;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .log li {
+      padding: 8px 10px;
+      margin-bottom: 6px;
+      border-radius: 10px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+    }
+
+    .sound-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .mini-map {
+      display: grid;
+      gap: 10px;
+    }
+
+    .mini-step {
+      display: grid;
+      grid-template-columns: 24px 1fr 60px;
+      gap: 8px;
+      align-items: center;
+      padding: 10px;
+      border-radius: 12px;
+      background: #f1f5f9;
+    }
+
+    .mini-step.active {
+      background: #dbeafe;
+      border: 1px solid #bfdbfe;
+    }
+
+    .chip-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .hint {
+      font-size: 13px;
+      color: var(--muted);
+    }
+  </style>
   <script type="module">
-    let level = 1;
+    const levelConfigs = [
+      {
+        id: 'forest',
+        title: '霓彩果林・加減小勇者',
+        ip: '咔啦龍 & 果凍狐',
+        max: 25,
+        ops: ['+', '-'],
+        target: 6,
+        color: '#ffb703',
+        vibe: '甜甜水果森林，咔啦龍幫你採果實做計算藥水！'
+      },
+      {
+        id: 'reef',
+        title: '海光珊瑚城・乘法潛艇',
+        ip: '泡泡虎鯨 & 閃亮魟',
+        max: 60,
+        ops: ['+', '-', '×'],
+        target: 7,
+        color: '#0ea5e9',
+        vibe: '在海底城市蒐集珍珠，乘法是你的渦輪引擎！'
+      },
+      {
+        id: 'star',
+        title: '星際補給站・百數冒險',
+        ip: '宇宙喵艦長',
+        max: 120,
+        ops: ['+', '-', '×'],
+        target: 8,
+        color: '#a855f7',
+        vibe: '穿越行星環收集能量晶片，用心算保護太空船！'
+      }
+    ];
+
+    const logList = [];
+    let currentLevel = levelConfigs[0];
+    let currentQuestion = null;
     let score = 0;
+    let streak = 0;
+    let bestStreak = 0;
     let questionsAnswered = 0;
-    let currentAnswer;
+    let unlockedLevels = new Set([levelConfigs[0].id]);
+    let soundOn = true;
+    const STORAGE_KEY = 'mathQuestSave';
+    let audioContext;
+
+    function initAudio() {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function playSound(type = 'correct') {
+      if (!soundOn) return;
+      initAudio();
+      const osc = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      osc.connect(gain).connect(audioContext.destination);
+      osc.type = 'sine';
+      const now = audioContext.currentTime;
+      if (type === 'correct') {
+        osc.frequency.setValueAtTime(620, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.2);
+      } else if (type === 'wrong') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(200, now);
+        osc.frequency.exponentialRampToValueAtTime(120, now + 0.25);
+      } else {
+        osc.frequency.setValueAtTime(480, now);
+      }
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.exponentialRampToValueAtTime(0.2, now + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+      osc.start(now);
+      osc.stop(now + 0.4);
+    }
+
+    function saveProgress() {
+      const payload = {
+        levelId: currentLevel.id,
+        score,
+        streak,
+        bestStreak,
+        questionsAnswered,
+        unlocked: [...unlockedLevels],
+        log: logList.slice(-20)
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      toast('進度已自動保存！');
+    }
+
+    function loadProgress() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      try {
+        const data = JSON.parse(raw);
+        const level = levelConfigs.find(l => l.id === data.levelId) || levelConfigs[0];
+        currentLevel = level;
+        score = data.score || 0;
+        streak = data.streak || 0;
+        bestStreak = data.bestStreak || 0;
+        questionsAnswered = data.questionsAnswered || 0;
+        unlockedLevels = new Set(data.unlocked || [levelConfigs[0].id]);
+        logList.push(...(data.log || []));
+        renderLevelCards();
+        updateStats();
+        renderLog();
+        updateHero();
+        generateQuestion();
+        toast('載入上次進度！');
+      } catch (e) {
+        console.error('Load failed', e);
+      }
+    }
+
+    function randomFrom(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function createQuestion() {
+      const max = currentLevel.max;
+      const op = randomFrom(currentLevel.ops);
+      const contexts = [
+        '咔啦龍要煮藥水，收集',
+        '果凍狐拼圖少了',
+        '泡泡虎鯨在舞台噴射',
+        '閃亮魟要送禮物，手上有',
+        '宇宙喵艦長補給艙剩下'
+      ];
+      const num1 = Math.floor(Math.random() * max / 2) + 6;
+      const num2 = Math.floor(Math.random() * max / 2) + 3;
+      let text = '';
+      let answer = 0;
+
+      if (op === '+') {
+        text = `${randomFrom(contexts)} ${num1} 個，路上又遇到 ${num2} 個，現在共有幾個？`;
+        answer = num1 + num2;
+      } else if (op === '-') {
+        const bigger = Math.max(num1 + 5, num2 + 5);
+        const smaller = Math.min(num1, num2);
+        text = `${randomFrom(contexts)} ${bigger} 顆能量糖，送出 ${smaller} 顆，還剩幾顆？`;
+        answer = bigger - smaller;
+      } else {
+        const safeNum1 = Math.min(12, Math.max(3, Math.round(num1 / 3)));
+        const safeNum2 = Math.min(9, Math.max(2, Math.round(num2 / 4)));
+        text = `${randomFrom(contexts)} 每次射出 ${safeNum1} 朵光花，要射出 ${safeNum2} 次，一共幾朵？`;
+        answer = safeNum1 * safeNum2;
+      }
+
+      const hint = op === '×'
+        ? '乘法可想成「重複加法」，也可以用跳跳數：每次加相同的量。'
+        : '先抓出重要數字，畫圖或用手指分段計算，讓腦袋保持節奏。';
+
+      return { text, answer, hint, op };
+    }
 
     function generateQuestion() {
-      let max;
-      if (level === 1) {
-        max = 20;
-      } else if (level === 2) {
-        max = 50;
-      } else {
-        max = 100;
-      }
-      const num1 = Math.floor(Math.random() * max) + 1;
-      const num2 = Math.floor(Math.random() * max) + 1;
-      const ops = ['+', '-', '×'];
-      const op = ops[Math.floor(Math.random() * ops.length)];
-      const questionText = `${num1} ${op} ${num2}`;
-      if (op === '+') {
-        currentAnswer = num1 + num2;
-      } else if (op === '-') {
-        currentAnswer = num1 - num2;
-      } else {
-        currentAnswer = num1 * num2;
-      }
-      document.getElementById('question').textContent = questionText;
+      currentQuestion = createQuestion();
+      document.getElementById('questionText').textContent = currentQuestion.text;
+      document.getElementById('hint').textContent = currentQuestion.hint;
       document.getElementById('answerInput').value = '';
+      document.getElementById('answerInput').focus();
       document.getElementById('feedback').textContent = '';
-      document.getElementById('level').textContent = level;
+      document.getElementById('opTag').textContent = `今日任務：${translateOp(currentQuestion.op)}練習`;
+      document.getElementById('progressNow').style.width = `${(questionsAnswered / currentLevel.target) * 100}%`;
+    }
+
+    function translateOp(op) {
+      return op === '+' ? '加法' : op === '-' ? '減法' : '乘法';
+    }
+
+    function updateStats() {
+      document.getElementById('score').textContent = score;
+      document.getElementById('streak').textContent = streak;
+      document.getElementById('bestStreak').textContent = bestStreak;
+      document.getElementById('currentLevelName').textContent = currentLevel.title;
+      document.getElementById('levelIp').textContent = currentLevel.ip;
+      document.getElementById('levelVibe').textContent = currentLevel.vibe;
+      document.documentElement.style.setProperty('--accent', currentLevel.color);
+      document.getElementById('progressTarget').textContent = currentLevel.target;
+      document.getElementById('progressNow').style.width = `${(questionsAnswered / currentLevel.target) * 100}%`;
+      document.getElementById('opList').textContent = currentLevel.ops.map(o => translateOp(o)).join('・');
+    }
+
+    function renderLevelCards() {
+      const wrapper = document.getElementById('levelCards');
+      wrapper.innerHTML = '';
+      levelConfigs.forEach((lvl, index) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        if (currentLevel.id === lvl.id) card.classList.add('active');
+        const locked = !unlockedLevels.has(lvl.id);
+        if (locked) card.classList.add('locked');
+        card.innerHTML = `
+          <div class="pill" style="background:${lvl.color}20;color:${lvl.color.replace('#', '#')};">
+            LV${index + 1}
+            ${locked ? '🔒' : '🚀'}
+          </div>
+          <h3>${lvl.title}</h3>
+          <div class="hint">${lvl.vibe}</div>
+          <div class="chip-row">
+            <span class="pill">運算：${lvl.ops.map(o => translateOp(o)).join('、')}</span>
+            <span class="pill">目標：${lvl.target} 題</span>
+          </div>
+        `;
+        card.addEventListener('click', () => {
+          if (locked) {
+            toast('先破完上一站才會解鎖喔！');
+            return;
+          }
+          currentLevel = lvl;
+          questionsAnswered = 0;
+          streak = 0;
+          updateStats();
+          renderLevelCards();
+          updateHero();
+          generateQuestion();
+          toast(`切換到 ${lvl.title}`);
+        });
+        wrapper.appendChild(card);
+      });
+    }
+
+    function renderLog() {
+      const list = document.getElementById('log');
+      list.innerHTML = '';
+      const recent = logList.slice(-20).reverse();
+      recent.forEach(item => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span>${item.icon} ${item.text}</span><strong>${item.delta > 0 ? '+' : ''}${item.delta}</strong>`;
+        list.appendChild(li);
+      });
+    }
+
+    function toast(text) {
+      const el = document.getElementById('feedback');
+      el.textContent = text;
+    }
+
+    function celebrate() {
+      playSound('correct');
+      streak += 1;
+      bestStreak = Math.max(bestStreak, streak);
+      score += 12 + streak * 2;
+      questionsAnswered += 1;
+      logList.push({ icon: '🌟', text: '闖關成功！', delta: 10 + streak * 2 });
+      updateStats();
+      renderLog();
+      if (questionsAnswered >= currentLevel.target) {
+        toast('恭喜完成此關！下一站解鎖！');
+        const idx = levelConfigs.findIndex(l => l.id === currentLevel.id);
+        const next = levelConfigs[idx + 1];
+        if (next) unlockedLevels.add(next.id);
+        questionsAnswered = 0;
+        renderLevelCards();
+        saveProgress();
+      } else {
+        saveProgress();
+      }
+    }
+
+    function markWrong() {
+      streak = 0;
+      score = Math.max(0, score - 3);
+      logList.push({ icon: '💤', text: '再想想，換個方法！', delta: -3 });
+      renderLog();
+      saveProgress();
     }
 
     function checkAnswer() {
-      const userAnswer = parseInt(document.getElementById('answerInput').value, 10);
-      if (userAnswer === currentAnswer) {
-        score += 10;
-        questionsAnswered++;
-        if (questionsAnswered >= 5) {
-          level++;
-          questionsAnswered = 0;
-          document.getElementById('feedback').textContent = '恭喜！進入下一關！';
-        } else {
-          document.getElementById('feedback').textContent = '答對了！繼續加油！';
-        }
-        document.getElementById('score').textContent = score;
+      const input = document.getElementById('answerInput');
+      const userAnswer = parseInt(input.value, 10);
+      if (Number.isNaN(userAnswer)) {
+        toast('先輸入你的答案喔！');
+        playSound('neutral');
+        return;
+      }
+      if (userAnswer === currentQuestion.answer) {
+        toast('答對了！角色跳舞慶祝 🎉');
+        celebrate();
         generateQuestion();
       } else {
-        document.getElementById('feedback').textContent = '答錯了，再試試！';
+        toast(`答錯了，試試看：${currentQuestion.hint}`);
+        playSound('wrong');
+        markWrong();
       }
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('submitAnswer').addEventListener('click', checkAnswer);
+    function skipQuestion() {
+      toast('換一題！保持節奏～');
+      streak = 0;
       generateQuestion();
+    }
+
+    function updateHero() {
+      const chip = document.getElementById('ipChip');
+      chip.textContent = `${currentLevel.ip} · ${currentLevel.title}`;
+      chip.style.background = currentLevel.color + '30';
+    }
+
+    function attachEvents() {
+      document.getElementById('submitAnswer').addEventListener('click', checkAnswer);
+      document.getElementById('skip').addEventListener('click', skipQuestion);
+      document.getElementById('save').addEventListener('click', saveProgress);
+      document.getElementById('reload').addEventListener('click', () => {
+        loadProgress();
+      });
+      document.getElementById('soundToggle').addEventListener('click', () => {
+        soundOn = !soundOn;
+        document.getElementById('soundToggle').textContent = soundOn ? '🔊 音效開啟' : '🔇 音效關閉';
+      });
+      document.getElementById('answerInput').addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') checkAnswer();
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderLevelCards();
+      attachEvents();
+      updateStats();
+      updateHero();
+      generateQuestion();
+      loadProgress();
     });
   </script>
 </head>
 <body>
-  <h1>三年級數學闖關遊戲</h1>
-  <p>關卡：<span id="level">1</span></p>
-  <p>得分：<span id="score">0</span></p>
-  <p id="question"></p>
-  <input type="number" id="answerInput" placeholder="輸入答案">
-  <button id="submitAnswer">確認</button>
-  <p id="feedback"></p>
+  <header>
+    <div class="hero">
+      <div>
+        <div class="ip-chip" id="ipChip" style="background:#ffedd5;">咔啦龍 & 果凍狐 · 霓彩果林</div>
+        <h1>三年級數學冒險學習機</h1>
+        <p id="levelVibe">甜甜水果森林，咔啦龍幫你採果實做計算藥水！</p>
+        <div class="chip-row">
+          <div class="badge">🎮 遊戲式闖關</div>
+          <div class="badge">🎵 流行音效</div>
+          <div class="badge">🛰️ 進度可保存</div>
+        </div>
+      </div>
+      <div class="ip-card">
+        <div class="label">今日主角</div>
+        <div class="big-number" id="currentLevelName">霓彩果林・加減小勇者</div>
+        <div class="hint">IP 夥伴：<span id="levelIp">咔啦龍 & 果凍狐</span></div>
+        <div class="chip-row" style="margin-top:8px;">
+          <div class="pill" id="opList">加法・減法</div>
+        </div>
+        <div class="chip-row" style="margin-top:8px;">
+          <button class="ghost" id="save">💾 保存進度</button>
+          <button class="ghost" id="reload">⏱️ 載入上次</button>
+          <div class="sound-toggle" id="soundToggle">🔊 音效開啟</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <section class="panel">
+      <div class="grid two-col">
+        <div class="panel" style="box-shadow:none;background:#fff;">
+          <div class="label">任務進度</div>
+          <div class="score-row">
+            <div>
+              <div class="big-number" id="score">0</div>
+              <div class="label">冒險積分</div>
+            </div>
+            <div>
+              <div class="big-number" id="streak">0</div>
+              <div class="label">連續答對</div>
+            </div>
+            <div>
+              <div class="big-number" id="bestStreak">0</div>
+              <div class="label">最佳紀錄</div>
+            </div>
+          </div>
+          <div class="progress">
+            <span id="progressNow" style="width:0%;"></span>
+          </div>
+          <div class="hint">完成 <span id="progressTarget">6</span> 題會自動解鎖下一站！</div>
+        </div>
+        <div class="panel" style="box-shadow:none;background:#fff;">
+          <div class="label">選擇關卡</div>
+          <div class="level-cards" id="levelCards"></div>
+        </div>
+      </div>
+
+      <div class="question-card">
+        <div class="pill" id="opTag">今日任務：加法練習</div>
+        <h2 class="question-title">咔啦龍的沉浸式挑戰</h2>
+        <p class="question-text" id="questionText">準備好了嗎？讓我們開始！</p>
+        <div class="hint" id="hint">用故事情境帶你算出答案。</div>
+        <div class="actions" style="margin:10px 0;">
+          <input type="number" id="answerInput" placeholder="輸入答案..." />
+          <button class="primary" id="submitAnswer">✨ 確認答案</button>
+          <button class="secondary" id="skip">🔄 再換一題</button>
+        </div>
+        <div class="feedback" id="feedback"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="label">冒險筆記</div>
+      <div class="mini-map">
+        <div class="mini-step active">
+          <div>1️⃣</div>
+          <div>
+            <strong>暖身挑戰</strong>
+            <div class="hint">加減法故事題，讓腦袋熱起來。</div>
+          </div>
+          <span class="pill">完成 3 題</span>
+        </div>
+        <div class="mini-step">
+          <div>2️⃣</div>
+          <div>
+            <strong>節奏突破</strong>
+            <div class="hint">乘法換算，把同樣的數字加起來。</div>
+          </div>
+          <span class="pill">完成 5 題</span>
+        </div>
+        <div class="mini-step">
+          <div>3️⃣</div>
+          <div>
+            <strong>星光收尾</strong>
+            <div class="hint">保持連勝，拚更高分數！</div>
+          </div>
+          <span class="pill">衝刺模式</span>
+        </div>
+      </div>
+      <div class="label" style="margin-top:10px;">最近事件</div>
+      <ul class="log" id="log"></ul>
+      <div class="hint" style="margin-top:8px;">提示：積分會自動保存，想換關卡隨時切換。</div>
+    </section>
+  </div>
 </body>
 </html>
