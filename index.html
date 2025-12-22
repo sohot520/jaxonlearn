@@ -5,7 +5,7 @@
   <title>三年級數學冒險學習機</title>
   <style>
     :root {
-      --bg: radial-gradient(circle at 20% 20%, #ffedd5 0, #ffe4c4 25%, #ffe8f1 50%, #e2f3ff 100%);
+      --bg: radial-gradient(circle at 20% 20%, #ffe8b3 0, #ffd6e8 26%, #d5e8ff 52%, #ccfbf1 100%);
       --card: #ffffffdd;
       --accent: #ff7a59;
       --accent-2: #3b82f6;
@@ -14,8 +14,8 @@
       --ip-1: #ffb703;
       --ip-2: #fb7185;
       --ip-3: #22c55e;
-      --text: #233142;
-      --muted: #5c6b7a;
+      --text: #14213d;
+      --muted: #4b5563;
       font-family: 'Noto Sans TC', 'Segoe UI', system-ui, -apple-system, sans-serif;
     }
 
@@ -29,6 +29,55 @@
       min-height: 100vh;
       background: var(--bg);
       color: var(--text);
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    .floating {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    .bubble {
+      position: absolute;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      filter: blur(36px);
+      opacity: 0.45;
+      animation: drift 18s ease-in-out infinite alternate;
+    }
+
+    .bubble.b1 { background: #ffb703aa; top: -40px; left: 6%; }
+    .bubble.b2 { background: #34d399aa; top: 20%; right: -60px; animation-duration: 16s; }
+    .bubble.b3 { background: #93c5fdaa; bottom: -60px; left: 20%; animation-duration: 20s; }
+    .bubble.b4 { background: #fb7185aa; bottom: 10%; right: 12%; animation-duration: 22s; }
+
+    @keyframes drift {
+      from { transform: translateY(0) scale(1); }
+      to { transform: translateY(-40px) scale(1.08); }
+    }
+
+    .sparkle {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: radial-gradient(circle, #fff 0%, transparent 60%);
+      animation: twinkle 2s ease-in-out infinite alternate;
+      opacity: 0.9;
+    }
+
+    .sparkle.s1 { top: 14%; left: 18%; animation-delay: 0.1s; }
+    .sparkle.s2 { top: 34%; right: 25%; animation-delay: 0.5s; }
+    .sparkle.s3 { bottom: 22%; left: 30%; animation-delay: 0.9s; }
+    .sparkle.s4 { bottom: 30%; right: 18%; animation-delay: 1.3s; }
+
+    @keyframes twinkle {
+      from { transform: scale(0.8); opacity: 0.5; }
+      to { transform: scale(1.4); opacity: 1; }
     }
 
     header {
@@ -37,11 +86,13 @@
       gap: 16px;
       align-items: center;
       flex-wrap: wrap;
+      position: relative;
+      z-index: 2;
     }
 
     .hero {
       flex: 1;
-      background: linear-gradient(120deg, #fff0d9 0%, #ffe2ec 40%, #dbeafe 100%);
+      background: linear-gradient(120deg, #fff7d6 0%, #ffe5f3 35%, #dff2ff 70%, #e4fffa 100%);
       border-radius: 24px;
       padding: 20px;
       display: grid;
@@ -54,6 +105,7 @@
     .hero h1 {
       margin: 0 0 8px;
       font-size: 28px;
+      letter-spacing: 0.4px;
     }
 
     .hero p {
@@ -67,6 +119,8 @@
       border-radius: 18px;
       padding: 14px;
       box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.6), var(--shadow);
+      position: relative;
+      overflow: hidden;
     }
 
     .ip-chip {
@@ -89,6 +143,8 @@
       grid-template-columns: 2fr 1fr;
       gap: 16px;
       padding: 0 24px 24px;
+      position: relative;
+      z-index: 2;
     }
 
     .panel {
@@ -154,6 +210,7 @@
       transition: all 0.2s ease;
       position: relative;
       overflow: hidden;
+      isolation: isolate;
     }
 
     .card:hover {
@@ -164,6 +221,20 @@
     .card.active {
       border-color: var(--accent);
       box-shadow: 0 10px 30px rgba(255, 122, 89, 0.2);
+    }
+
+    .card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.8), transparent 50%);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      z-index: -1;
+    }
+
+    .card:hover::after {
+      opacity: 1;
     }
 
     .card.locked {
@@ -195,6 +266,7 @@
       box-shadow: var(--shadow);
       position: relative;
       overflow: hidden;
+      isolation: isolate;
     }
 
     .question-title {
@@ -342,6 +414,123 @@
       font-size: 13px;
       color: var(--muted);
     }
+
+    .mascot {
+      position: absolute;
+      right: 16px;
+      top: 12px;
+      width: 120px;
+      height: 120px;
+      border-radius: 30px;
+      background: radial-gradient(circle at 30% 30%, #fff 0%, #ffe6f2 50%, #ffd1c2 100%);
+      box-shadow: 0 15px 40px rgba(255, 122, 89, 0.32);
+      display: grid;
+      place-items: center;
+      transform: rotate(6deg);
+      animation: floaty 4s ease-in-out infinite;
+    }
+
+    .mascot span {
+      font-size: 46px;
+    }
+
+    @keyframes floaty {
+      0% { transform: translateY(0) rotate(6deg); }
+      50% { transform: translateY(-8px) rotate(4deg); }
+      100% { transform: translateY(0) rotate(6deg); }
+    }
+
+    .ticker {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px;
+      align-items: center;
+      margin: 10px 0 0;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: linear-gradient(90deg, rgba(255, 183, 3, 0.14), rgba(14, 165, 233, 0.16));
+      border: 1px solid rgba(0,0,0,0.04);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.7);
+    }
+
+    .ticker .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #f97316;
+      animation: blink 1.4s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 0.7; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+
+    .sticker-bar {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .sticker {
+      padding: 8px 12px;
+      border-radius: 12px;
+      background: #0f172a;
+      color: #fff;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      box-shadow: 0 8px 20px rgba(15,23,42,0.2);
+    }
+
+    .orbit-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .orbit {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #fff 0%, var(--accent) 100%);
+      box-shadow: 0 6px 16px rgba(255, 122, 89, 0.3);
+      animation: orbit 2.6s ease-in-out infinite alternate;
+    }
+
+    @keyframes orbit {
+      from { transform: translateY(0) rotate(-6deg); }
+      to { transform: translateY(-6px) rotate(6deg); }
+    }
+
+    .buddy-card {
+      background: linear-gradient(120deg, #0ea5e915, #a855f715, #f9731615);
+      border: 1px solid rgba(255,255,255,0.6);
+      border-radius: 14px;
+      padding: 12px;
+      box-shadow: var(--shadow);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .buddy-emoji {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      font-size: 28px;
+      background: #fff;
+      box-shadow: inset 0 0 0 1px #e5e7eb, 0 8px 24px rgba(0,0,0,0.08);
+    }
+
+    .pill.soft {
+      background: rgba(255,255,255,0.8);
+      border: 1px solid rgba(0,0,0,0.04);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.06);
+    }
   </style>
   <script type="module">
     const levelConfigs = [
@@ -376,6 +565,26 @@
         vibe: '穿越行星環收集能量晶片，用心算保護太空船！'
       }
     ];
+
+    const tickerTexts = [
+      '今天的任務：幫咔啦龍蒐集能量果實！',
+      '保持節奏：連續答對越多，分數衝更快！',
+      '泡泡虎鯨說：換題也沒關係，記得深呼吸～',
+      '宇宙喵艦長需要補給，快用乘法算出能量！',
+      '果凍狐喜歡畫圖算數，試試草稿思考法。',
+      '提示：乘法可以用跳跳數，+3、+3、+3 的節奏。',
+      '咔啦龍：保持音效開啟，答對就會跳舞！'
+    ];
+
+    const buddyShouts = [
+      '「出發！用數字魔法守護果林！」',
+      '「連勝閃電加成，讓積分咻咻漲！」',
+      '「想像自己是 DJ，把節奏打準就成功！」',
+      '「答錯沒關係，換個方法再衝！」',
+      '「小數學家，今天也要勇敢闖關！」'
+    ];
+
+    const mascotEmojis = ['🦊', '🐉', '🐯', '🦄', '🐳', '🚀', '🌠'];
 
     const logList = [];
     let currentLevel = levelConfigs[0];
@@ -462,6 +671,19 @@
       return arr[Math.floor(Math.random() * arr.length)];
     }
 
+    function refreshTicker() {
+      document.getElementById('tickerText').textContent = randomFrom(tickerTexts);
+    }
+
+    function refreshBuddy() {
+      document.getElementById('buddyMessage').textContent = randomFrom(buddyShouts);
+      document.getElementById('buddyEmoji').textContent = randomFrom(mascotEmojis);
+    }
+
+    function refreshMascot() {
+      document.getElementById('mascotEmoji').textContent = randomFrom(mascotEmojis);
+    }
+
     function createQuestion() {
       const max = currentLevel.max;
       const op = randomFrom(currentLevel.ops);
@@ -508,6 +730,9 @@
       document.getElementById('feedback').textContent = '';
       document.getElementById('opTag').textContent = `今日任務：${translateOp(currentQuestion.op)}練習`;
       document.getElementById('progressNow').style.width = `${(questionsAnswered / currentLevel.target) * 100}%`;
+      refreshTicker();
+      refreshBuddy();
+      refreshMascot();
     }
 
     function translateOp(op) {
@@ -665,11 +890,25 @@
       updateStats();
       updateHero();
       generateQuestion();
+      refreshTicker();
+      refreshBuddy();
+      refreshMascot();
+      setInterval(refreshTicker, 9000);
       loadProgress();
     });
   </script>
 </head>
 <body>
+  <div class="floating">
+    <div class="bubble b1"></div>
+    <div class="bubble b2"></div>
+    <div class="bubble b3"></div>
+    <div class="bubble b4"></div>
+    <div class="sparkle s1"></div>
+    <div class="sparkle s2"></div>
+    <div class="sparkle s3"></div>
+    <div class="sparkle s4"></div>
+  </div>
   <header>
     <div class="hero">
       <div>
@@ -680,6 +919,20 @@
           <div class="badge">🎮 遊戲式闖關</div>
           <div class="badge">🎵 流行音效</div>
           <div class="badge">🛰️ 進度可保存</div>
+        </div>
+        <div class="sticker-bar">
+          <div class="sticker">🌈 Math DJ</div>
+          <div class="sticker">🐉 冒險家</div>
+          <div class="sticker">⚡ 連勝中</div>
+        </div>
+        <div class="ticker">
+          <div class="dot"></div>
+          <div id="tickerText">今天的任務：幫咔啦龍蒐集能量果實！</div>
+        </div>
+        <div class="orbit-row">
+          <div class="orbit"></div>
+          <div class="orbit" style="animation-delay:0.2s;background:linear-gradient(135deg,#fff 0%,#0ea5e9 100%);"></div>
+          <div class="orbit" style="animation-delay:0.4s;background:linear-gradient(135deg,#fff 0%,#22c55e 100%);"></div>
         </div>
       </div>
       <div class="ip-card">
@@ -693,6 +946,13 @@
           <button class="ghost" id="save">💾 保存進度</button>
           <button class="ghost" id="reload">⏱️ 載入上次</button>
           <div class="sound-toggle" id="soundToggle">🔊 音效開啟</div>
+        </div>
+        <div class="buddy-card" style="margin-top:10px;">
+          <div class="buddy-emoji" id="buddyEmoji">🐉</div>
+          <div>
+            <div class="label">冒險夥伴口號</div>
+            <div class="big-number" style="font-size:18px;" id="buddyMessage">「出發！用數字魔法守護果林！」</div>
+          </div>
         </div>
       </div>
     </div>
@@ -739,6 +999,7 @@
           <button class="secondary" id="skip">🔄 再換一題</button>
         </div>
         <div class="feedback" id="feedback"></div>
+        <div class="mascot"><span id="mascotEmoji">🦊</span></div>
       </div>
     </section>
 
