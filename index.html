@@ -1982,12 +1982,18 @@
         console.error('本地儲存失敗:', e);
       }
 
-      // 如果有 Firebase 連接，也存到雲端
+      // 如果有 Firebase 連接，也存到雲端（設定 5 秒超時避免卡住）
       if (db) {
         try {
           const dataToSave = { ...gameState };
           dataToSave.updatedAt = new Date().toISOString();
-          await db.collection('players').doc(gameState.playerId).set(dataToSave);
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Firebase 寫入超時')), 5000)
+          );
+          await Promise.race([
+            db.collection('players').doc(gameState.playerId).set(dataToSave),
+            timeoutPromise
+          ]);
         } catch (error) {
           console.error('雲端儲存失敗:', error);
         }
@@ -2007,10 +2013,16 @@
         console.error('本地資料解析失敗:', e);
       }
 
-      // 如果有 Firebase 連接，嘗試從雲端載入
+      // 如果有 Firebase 連接，嘗試從雲端載入（設定 5 秒超時避免卡住）
       if (db) {
         try {
-          const docSnap = await db.collection('players').doc(gameState.playerId).get();
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Firebase 讀取超時')), 5000)
+          );
+          const docSnap = await Promise.race([
+            db.collection('players').doc(gameState.playerId).get(),
+            timeoutPromise
+          ]);
           if (docSnap.exists) {
             const data = docSnap.data();
             Object.assign(gameState, data);
