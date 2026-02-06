@@ -1258,6 +1258,13 @@
     .shake { animation: shake 0.3s ease; }
     .glow { animation: glow 2s infinite; }
 
+    /* ===== 鍵盤導航 ===== */
+    .kb-focus {
+      outline: 3px solid #FDCB6E !important;
+      outline-offset: 3px;
+      box-shadow: 0 0 15px rgba(253, 203, 110, 0.6) !important;
+    }
+
     /* ===== 隱藏元素 ===== */
     .hidden {
       display: none !important;
@@ -2631,8 +2638,158 @@
       }
     });
 
-    // 鍵盤支援
+    // ========== 鍵盤導航系統 ==========
+    const kbNav = {
+      focusIndex: 0,
+      items: [],
+
+      getActiveScreen() {
+        return document.querySelector('.screen.active');
+      },
+
+      // 取得目前畫面上所有可互動的元素
+      getNavigableItems() {
+        const screen = this.getActiveScreen();
+        if (!screen) return [];
+
+        // 結果彈窗優先
+        const overlay = document.getElementById('result-overlay');
+        if (!overlay.classList.contains('hidden')) {
+          return Array.from(overlay.querySelectorAll('button'));
+        }
+
+        const items = [];
+        const screenId = screen.id;
+
+        if (screenId === 'login-screen') {
+          items.push(...screen.querySelectorAll('.login-btn'));
+        } else if (screenId === 'create-avatar-screen') {
+          items.push(...screen.querySelectorAll('.avatar-option'));
+          items.push(screen.querySelector('#player-name-input'));
+          items.push(screen.querySelector('.btn-accent'));
+        } else if (screenId === 'kid-main-screen') {
+          const levelView = document.getElementById('level-select-view');
+          if (!levelView.classList.contains('hidden')) {
+            const backBtn = levelView.querySelector('.back-btn');
+            if (backBtn) items.push(backBtn);
+            items.push(...levelView.querySelectorAll('.level-node:not(.locked)'));
+          } else {
+            items.push(...screen.querySelectorAll('.world-card:not(.locked)'));
+          }
+          items.push(...screen.querySelectorAll('.bottom-nav .nav-item'));
+        } else if (screenId === 'game-screen') {
+          // 遊戲畫面用數字鍵，不需要方向鍵導航
+          return [];
+        } else if (screenId === 'quest-screen') {
+          items.push(...screen.querySelectorAll('.bottom-nav .nav-item'));
+        } else if (screenId === 'shop-screen') {
+          items.push(...screen.querySelectorAll('.shop-category'));
+          items.push(...screen.querySelectorAll('.shop-item'));
+          items.push(...screen.querySelectorAll('.bottom-nav .nav-item'));
+        } else if (screenId === 'avatar-screen') {
+          items.push(...screen.querySelectorAll('.bottom-nav .nav-item'));
+        } else if (screenId === 'parent-screen') {
+          items.push(screen.querySelector('#time-limit'));
+          items.push(screen.querySelector('#level-limit'));
+          items.push(screen.querySelector('#social-toggle'));
+          items.push(screen.querySelector('#leaderboard-toggle'));
+          items.push(...screen.querySelectorAll('.btn'));
+        }
+
+        return items.filter(Boolean);
+      },
+
+      refresh() {
+        this.clearFocus();
+        this.items = this.getNavigableItems();
+        this.focusIndex = 0;
+        if (this.items.length > 0) {
+          this.applyFocus();
+        }
+      },
+
+      clearFocus() {
+        document.querySelectorAll('.kb-focus').forEach(el => el.classList.remove('kb-focus'));
+      },
+
+      applyFocus() {
+        this.clearFocus();
+        if (this.items.length === 0) return;
+        if (this.focusIndex < 0) this.focusIndex = this.items.length - 1;
+        if (this.focusIndex >= this.items.length) this.focusIndex = 0;
+        const el = this.items[this.focusIndex];
+        if (el) {
+          el.classList.add('kb-focus');
+          el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+      },
+
+      move(direction) {
+        if (this.items.length === 0) {
+          this.items = this.getNavigableItems();
+          this.focusIndex = 0;
+        }
+        if (this.items.length === 0) return;
+
+        const screen = this.getActiveScreen();
+        const screenId = screen ? screen.id : '';
+
+        // 判斷使用的列數（grid layout 情況）
+        let cols = 1;
+        if (screenId === 'create-avatar-screen') {
+          // 角色選擇 3x2 grid，之後是 input + button
+          const avatarCount = screen.querySelectorAll('.avatar-option').length;
+          if (this.focusIndex < avatarCount) cols = 3;
+        } else if (screenId === 'kid-main-screen') {
+          const levelView = document.getElementById('level-select-view');
+          if (levelView.classList.contains('hidden')) {
+            cols = 1; // world cards 是直排
+          } else {
+            cols = 5; // level nodes
+          }
+        } else if (screenId === 'shop-screen') {
+          const catCount = screen.querySelectorAll('.shop-category').length;
+          const itemCount = screen.querySelectorAll('.shop-item').length;
+          if (this.focusIndex < catCount) {
+            cols = catCount;
+          } else if (this.focusIndex < catCount + itemCount) {
+            cols = 2;
+          } else {
+            cols = 4; // nav items
+          }
+        }
+
+        if (direction === 'up') {
+          this.focusIndex = Math.max(0, this.focusIndex - cols);
+        } else if (direction === 'down') {
+          this.focusIndex = Math.min(this.items.length - 1, this.focusIndex + cols);
+        } else if (direction === 'left') {
+          this.focusIndex = Math.max(0, this.focusIndex - 1);
+        } else if (direction === 'right') {
+          this.focusIndex = Math.min(this.items.length - 1, this.focusIndex + 1);
+        }
+
+        this.applyFocus();
+      },
+
+      activate() {
+        if (this.items.length === 0) return;
+        const el = this.items[this.focusIndex];
+        if (!el) return;
+
+        if (el.tagName === 'INPUT') {
+          el.focus();
+          return;
+        }
+
+        el.click();
+        // 畫面切換後重新整理導航
+        setTimeout(() => this.refresh(), 100);
+      }
+    };
+
     document.addEventListener('keydown', (e) => {
+      // 遊戲畫面維持原有的數字鍵輸入
       if (document.getElementById('game-screen').classList.contains('active')) {
         if (e.key >= '0' && e.key <= '9') {
           inputNumber(e.key);
@@ -2643,8 +2800,49 @@
         } else if (e.key === 'Enter') {
           submitAnswer();
         }
+        return;
+      }
+
+      // 如果正在 input 輸入中，只攔截 Enter
+      if (document.activeElement && document.activeElement.tagName === 'INPUT') {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          document.activeElement.blur();
+          kbNav.move('down');
+        }
+        return;
+      }
+
+      switch (e.key) {
+        case 'ArrowUp':
+          e.preventDefault();
+          kbNav.move('up');
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          kbNav.move('down');
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          kbNav.move('left');
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          kbNav.move('right');
+          break;
+        case 'Enter':
+          e.preventDefault();
+          kbNav.activate();
+          break;
       }
     });
+
+    // 畫面切換時自動重新整理鍵盤導航
+    const origShowScreen = window.showScreen;
+    window.showScreen = function(screenId) {
+      origShowScreen(screenId);
+      setTimeout(() => kbNav.refresh(), 150);
+    };
   </script>
 </body>
 </html>
